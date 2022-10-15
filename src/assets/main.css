@@ -1,0 +1,14 @@
+body {
+  display: flex;
+  justify-content: center;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  font-family: Tahoma, sans-serif;
+}
+
+h1 {
+  text-align: center;
+}
