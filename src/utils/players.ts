@@ -24,7 +24,9 @@ export const getGoalieStats = (
       nationality: goalie.person.nationality,
       saves: goalie.stats.goalieStats!.saves,
       shots: goalie.stats.goalieStats!.shots,
-      savePercentage: goalie.stats.goalieStats!.savePercentage,
+      savePercentage: Number(
+        goalie.stats.goalieStats!.savePercentage.toFixed(2)
+      ),
       timeOnIce: goalie.stats.goalieStats!.timeOnIce,
     };
   });

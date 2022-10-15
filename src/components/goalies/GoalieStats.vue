@@ -14,7 +14,7 @@ export default defineComponent({
 <template>
   <div class='goalieRow' :class='{ alternate: !isEven, finnish: isFinnish }'>
     <div class='goalieName'>{{ goalie.name }}</div>
-    <div class='goalieGame'>{{ goalie.decision }} ({{ goalie.timeOnIce }}), {{ goalie.saves }}/{{ goalie.shots }}, {{ goalie.savePercentage.toFixed(2) }}%</div>
+    <div class='goalieGame'>{{ goalie.decision }} ({{ goalie.timeOnIce }}), {{ goalie.saves }}/{{ goalie.shots }}, {{ goalie.savePercentage }}%</div>
   </div>
 </template>
 
