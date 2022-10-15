@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 import GameResultHeader from './GameResultHeader.vue';
 import GameScoring from './GameScoring.vue';
 import GameGoalieStats from './GameGoalieStats.vue';

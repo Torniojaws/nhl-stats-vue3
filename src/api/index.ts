@@ -1,4 +1,4 @@
-import type { IGameData } from "../types/game";
+import type { IGameData, IParsedGameData } from "../types/game";
 import type { IGameTeam } from "../types/team";
 import { getGoalieStats, getPoints } from "../utils/players";
 
@@ -24,7 +24,9 @@ const getAllGames = async (games: IGameData[]): Promise<IGameTeam[]> => {
   return Promise.all(promises);
 };
 
-const parsedResults = async (games: IGameData[]) => {
+const parsedResults = async (
+  games: IGameData[]
+): Promise<IParsedGameData[]> => {
   const gamesResults = await getAllGames(games);
   return gamesResults.map((gameResult) => {
     return {
@@ -41,7 +43,9 @@ const parsedResults = async (games: IGameData[]) => {
   });
 };
 
-export const getLastNightGamesResults = async () => {
+export const getLastNightGamesResults = async (): Promise<
+  IParsedGameData[]
+> => {
   const gamesLastNight = await getGamesOnDate(yesterday);
-  return await parsedResults(gamesLastNight);
+  return parsedResults(gamesLastNight);
 };

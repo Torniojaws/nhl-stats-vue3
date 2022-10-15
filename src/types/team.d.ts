@@ -29,14 +29,14 @@ interface PersonData {
   nationality: string;
 }
 
-interface PlayerData {
+export interface PlayerData {
   person: PersonData;
   jerseyNumber: string;
   position: PositionData;
   stats: PlayerStats;
 }
 
-interface TeamData {
+export interface TeamData {
   teamStats: {
     teamSkaterStats: {
       goals: number;

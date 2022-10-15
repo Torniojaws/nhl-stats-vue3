@@ -1,3 +1,5 @@
+import type { IGoalieStats, IPlayerPoints } from "./players";
+
 interface Team {
   leagueRecord: {
     wins: number;
@@ -25,4 +27,15 @@ export interface IGameData {
     away: Team;
     home: Team;
   };
+}
+
+interface Stats {
+  goalies: IGoalieStats[];
+  points: IPlayerPoints[];
+}
+
+export interface IParsedGameData {
+  game: any;
+  away: Stats;
+  home: Stats;
 }

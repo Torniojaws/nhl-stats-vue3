@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 import PlayerPoints from '../points/PlayerPoints.vue';
 export default {
   components: {

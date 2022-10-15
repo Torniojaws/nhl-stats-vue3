@@ -1,5 +1,6 @@
-<script>
-export default {
+<script lang="ts">
+import { defineComponent } from 'vue'
+export default defineComponent({
   props: ['player', 'index'],
   data() {
     return {
@@ -7,7 +8,7 @@ export default {
       isFinnish: this.player.nationality.toLowerCase() === 'fin'
     }
   }
-}
+})
 </script>
 
 <template>

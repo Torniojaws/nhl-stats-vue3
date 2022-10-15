@@ -1,23 +1,33 @@
-import type { IGameTeam } from "../types/team";
+import type { IGameTeam, TeamData, PlayerData } from "../types/team";
+import type { IGoalieStats } from "../types/players";
 
-// Multiple goalies can play in one game, so all are returned
-export const getGoalieStats = (team: "home" | "away", data: IGameTeam) => {
-  const allPlayers = data[team].players;
-  return Object.keys(allPlayers)
-    .map((key) => {
-      const player = allPlayers[key];
-      if (!player.stats.goalieStats) return;
-      return {
-        decision: player.stats.goalieStats.decision, // If no value, goalie didn't finish the game
-        name: player.person.fullName,
-        nationality: player.person.nationality,
-        saves: player.stats.goalieStats.saves,
-        shots: player.stats.goalieStats.shots,
-        savePercentage: player.stats.goalieStats.savePercentage.toFixed(2),
-        timeOnIce: player.stats.goalieStats.timeOnIce,
-      };
-    })
+const getGoalieIds = (teamData: TeamData) =>
+  Object.keys(teamData.players)
+    .filter((playerId) => teamData.players[playerId].position.code === "G")
     .filter(Boolean);
+
+const getGoalies = (teamData: TeamData): PlayerData[] => {
+  const goaliePlayerIds: string[] = getGoalieIds(teamData);
+  return goaliePlayerIds.map((goalieId) => teamData.players[goalieId]);
+};
+
+// Multiple goalies can play in one game, so all are returnedrf
+export const getGoalieStats = (
+  team: "home" | "away",
+  data: IGameTeam
+): IGoalieStats[] => {
+  const goalies = getGoalies(data[team]);
+  return goalies.map((goalie) => {
+    return {
+      decision: goalie.stats.goalieStats!.decision,
+      name: goalie.person.fullName,
+      nationality: goalie.person.nationality,
+      saves: goalie.stats.goalieStats!.saves,
+      shots: goalie.stats.goalieStats!.shots,
+      savePercentage: goalie.stats.goalieStats!.savePercentage,
+      timeOnIce: goalie.stats.goalieStats!.timeOnIce,
+    };
+  });
 };
 
 export const getPoints = (team: "home" | "away", data: IGameTeam) => {

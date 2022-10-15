@@ -1,12 +1,17 @@
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue'
 import GameDetails from "./game/GameDetails.vue";
 import { getLastNightGamesResults } from "../api";
 
-export default {
+interface StateData {
+  games: any[];
+}
+
+export default defineComponent({
   components: {
     GameDetails,
   },
-  data() {
+  data(): StateData {
     return {
       games: [],
     };
@@ -14,7 +19,7 @@ export default {
   async mounted() {
     this.games = await getLastNightGamesResults();
   },
-};
+});
 </script>
 
 <template>

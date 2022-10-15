@@ -1,16 +1,17 @@
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue';
 import { getTeamColorCss } from '../../utils/teams';
-export default {
+export default defineComponent({
   props: ['away', 'game', 'home'],
   methods: {
-    getTeamBackground: (teamName) => getTeamColorCss(teamName)
+    getTeamBackground: (teamName: string) => getTeamColorCss(teamName)
   },
   data() {
     return {
       isGameInProgress: this.game.status.abstractGameState !== 'Final'
     }
   }
-}
+})
 </script>
 
 <template>

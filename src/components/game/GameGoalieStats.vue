@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 import GoalieStats from '../goalies/GoalieStats.vue';
 export default {
   components: {

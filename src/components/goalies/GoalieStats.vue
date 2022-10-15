@@ -1,5 +1,6 @@
-<script>
-export default {
+<script lang="ts">
+import { defineComponent } from 'vue';
+export default defineComponent({
   props: ['goalie', 'index'],
   data() {
     return {
@@ -7,13 +8,13 @@ export default {
       isFinnish: this.goalie.nationality.toLowerCase() === 'fin'
     }
   }
-}
+})
 </script>
 
 <template>
   <div class='goalieRow' :class='{ alternate: !isEven, finnish: isFinnish }'>
     <div class='goalieName'>{{ goalie.name }}</div>
-    <div class='goalieGame'>{{ goalie.decision }} ({{ goalie.timeOnIce }}), {{ goalie.saves }}/{{ goalie.shots }}, {{ goalie.savePercentage }}%</div>
+    <div class='goalieGame'>{{ goalie.decision }} ({{ goalie.timeOnIce }}), {{ goalie.saves }}/{{ goalie.shots }}, {{ goalie.savePercentage.toFixed(2) }}%</div>
   </div>
 </template>
 
@@ -37,14 +38,3 @@ export default {
   margin-bottom: 8px;
 }
 </style>
-
-<!-- 
-export interface IGoalieStats {
-  decision: string;
-  name: string;
-  nationality: string;
-  saves: number;
-  shots: number;
-  savePercentage: number;
-  timeOnIce: string;
-} -->
