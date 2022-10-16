@@ -2,6 +2,7 @@
   "name": "nhl-stats-vue3",
   "version": "0.0.1",
   "scripts": {
+    "deploy": "./deploy.sh",
     "dev": "vite",
     "build": "run-p type-check build-only",
     "preview": "vite preview --port 4173",
