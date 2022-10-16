@@ -18,16 +18,22 @@ export const getGoalieStats = (
 ): IGoalieStats[] => {
   const goalies = getGoalies(data[team]);
   return goalies.map((goalie) => {
+    console.log("checking goalie", goalie);
     return {
-      decision: goalie.stats.goalieStats!.decision,
+      decision: goalie.stats.goalieStats
+        ? goalie.stats.goalieStats.decision
+        : "",
       name: goalie.person.fullName,
       nationality: goalie.person.nationality,
-      saves: goalie.stats.goalieStats!.saves,
-      shots: goalie.stats.goalieStats!.shots,
-      savePercentage: Number(
-        goalie.stats.goalieStats!.savePercentage.toFixed(2)
-      ),
-      timeOnIce: goalie.stats.goalieStats!.timeOnIce,
+      saves: goalie.stats.goalieStats ? goalie.stats.goalieStats.saves : 0,
+      shots: goalie.stats.goalieStats ? goalie.stats.goalieStats.shots : 0,
+      savePercentage:
+        goalie.stats.goalieStats && goalie.stats.goalieStats.savePercentage
+          ? Number(goalie.stats.goalieStats.savePercentage.toFixed(2))
+          : 0,
+      timeOnIce: goalie.stats.goalieStats
+        ? goalie.stats.goalieStats.timeOnIce
+        : "00:00",
     };
   });
 };

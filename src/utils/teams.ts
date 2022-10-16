@@ -6,7 +6,7 @@ interface TeamColors {
 }
 
 const colors: TeamColors = {
-  "Anaheim Ducks": { bottom: "gold", top: "orange" },
+  "Anaheim Ducks": { bottom: "#e43603", top: "black" },
   "Arizona Coyotes": { bottom: "black", top: "maroon" },
   "Boston Bruins": { bottom: "gold", top: "black" },
   "Buffalo Sabres": { bottom: "gold", top: "blue" },
@@ -31,7 +31,7 @@ const colors: TeamColors = {
   "Pittsburgh Penguins": { bottom: "gold", top: "black" },
   "San Jose Sharks": { bottom: "silver", top: "teal" },
   "Seattle Kraken": { bottom: "#97d2d3", top: "#041b2d" },
-  "St Louis Blues": { bottom: "gold", top: "blue" },
+  "St. Louis Blues": { bottom: "gold", top: "blue" },
   "Tampa Bay Lightning": { bottom: "silver", top: "blue" },
   "Toronto Maple Leafs": { bottom: "white", top: "blue" },
   "Vancouver Canucks": { bottom: "#006d48", top: "#002959" },
@@ -49,6 +49,7 @@ const getColorsForTeam = (teamName: string) => {
 
 export const getTeamColorCss = (teamName: string) => {
   const normalized = teamName.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  console.log(normalized);
   const { topColor, bottomColor } = getColorsForTeam(normalized);
   return `linear-gradient(${topColor}, ${bottomColor})`;
 };
