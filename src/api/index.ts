@@ -1,9 +1,7 @@
 import type { IGameData, IParsedGameData } from "../types/game";
 import type { IGameTeam } from "../types/team";
 import { getGoalieStats, getPoints } from "../utils/players";
-
-// YYYY-MM-DD
-const yesterday = new Date(Date.now() - 864e5).toISOString().split("T")[0];
+import { yesterday } from "../utils/dates";
 
 const getGamesOnDate = async (date: string) =>
   fetch(`https://statsapi.web.nhl.com/api/v1/schedule?date=${date}`)
@@ -20,6 +18,7 @@ const getGameResult = (gamePk: number) =>
     .catch((err) => err);
 
 const getAllGames = async (games: IGameData[]): Promise<IGameTeam[]> => {
+  if (!games.length) return [];
   const promises = games.map((game) => getGameResult(game.gamePk));
   return Promise.all(promises);
 };
