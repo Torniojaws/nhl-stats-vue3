@@ -18,7 +18,6 @@ export const getGoalieStats = (
 ): IGoalieStats[] => {
   const goalies = getGoalies(data[team]);
   return goalies.map((goalie) => {
-    console.log("checking goalie", goalie);
     return {
       decision: goalie.stats.goalieStats
         ? goalie.stats.goalieStats.decision

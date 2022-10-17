@@ -49,7 +49,6 @@ const getColorsForTeam = (teamName: string) => {
 
 export const getTeamColorCss = (teamName: string) => {
   const normalized = teamName.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  console.log(normalized);
   const { topColor, bottomColor } = getColorsForTeam(normalized);
   return `linear-gradient(${topColor}, ${bottomColor})`;
 };
