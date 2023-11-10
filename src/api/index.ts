@@ -1,25 +1,25 @@
 import type { IGameData, IParsedGameData } from "../types/game";
-import type { IGameTeam } from "../types/team";
+import type { IGameBoxscore } from "../types/team";
 import { getGoalieStats, getPoints } from "../utils/players";
 import { yesterday } from "../utils/dates";
 
 const getGamesOnDate = async (date: string) =>
-  fetch(`https://statsapi.web.nhl.com/api/v1/schedule?date=${date}`)
+  fetch(`https://corsproxy.io/?https://api-web.nhle.com/v1/schedule/${date}`)
     .then((response) => response.json())
-    .then((data) => data.dates[0].games)
+    .then((data) => data.gameWeek[0].games)
     .catch((err) => err);
 
-const getGameResult = (gamePk: number) =>
-  fetch(`https://statsapi.web.nhl.com/api/v1/game/${gamePk}/boxscore`)
+const getGameResult = async (gameId: number): Promise<IGameBoxscore> =>
+  fetch(
+    `https://corsproxy.io/?https://api-web.nhle.com/v1/gamecenter/${gameId}/boxscore`
+  )
     .then((response) => response.json())
-    .then((data) => {
-      return { gamePk, ...data.teams };
-    })
+    .then((data) => data)
     .catch((err) => err);
 
-const getAllGames = async (games: IGameData[]): Promise<IGameTeam[]> => {
+const getAllGames = async (games: IGameData[]): Promise<IGameBoxscore[]> => {
   if (!games.length) return [];
-  const promises = games.map((game) => getGameResult(game.gamePk));
+  const promises = games.map((game) => getGameResult(game.id));
   return Promise.all(promises);
 };
 
@@ -29,14 +29,14 @@ const parsedResults = async (
   const gamesResults = await getAllGames(games);
   return gamesResults.map((gameResult) => {
     return {
-      game: games.find((game) => game.gamePk === gameResult.gamePk),
+      game: games.find((game) => game.id === gameResult.id),
       away: {
-        goalies: getGoalieStats("away", gameResult),
-        points: getPoints("away", gameResult),
+        goalies: getGoalieStats("awayTeam", gameResult),
+        points: getPoints("awayTeam", gameResult),
       },
       home: {
-        goalies: getGoalieStats("home", gameResult),
-        points: getPoints("home", gameResult),
+        goalies: getGoalieStats("homeTeam", gameResult),
+        points: getPoints("homeTeam", gameResult),
       },
     };
   });

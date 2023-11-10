@@ -1,21 +1,31 @@
 <script lang="ts">
-import GoalieStats from '../goalies/GoalieStats.vue';
+import GoalieStats from "../goalies/GoalieStats.vue";
 export default {
   components: {
     GoalieStats,
   },
-  props: ['away', 'game', 'home'],
-}
+  props: ["away", "game", "home"],
+};
 </script>
 
 <template>
-  <div class='goalieResults'>
-    <div class='goalies'>
-      <GoalieStats v-for='(goalie, i) in home.goalies' :goalie='goalie' :index='i' />
+  <div class="goalieResults">
+    <div class="goalies">
+      <GoalieStats
+        v-for="(goalie, i) in home.goalies"
+        :goalie="goalie"
+        :index="i"
+        :key="i"
+      />
     </div>
-    <div class='divider' />
-    <div class='goalies'>
-      <GoalieStats v-for='(goalie, i) in away.goalies' :goalie='goalie' :index='i' />
+    <div class="divider" />
+    <div class="goalies">
+      <GoalieStats
+        v-for="(goalie, i) in away.goalies"
+        :goalie="goalie"
+        :index="i"
+        :key="i"
+      />
     </div>
   </div>
 </template>

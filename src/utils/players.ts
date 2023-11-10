@@ -1,59 +1,50 @@
-import type { IGameTeam, TeamData, PlayerData } from "../types/team";
+import type { IGameBoxscore } from "../types/team";
 import type { IGoalieStats } from "../types/players";
 
-const getGoalieIds = (teamData: TeamData) =>
-  Object.keys(teamData.players)
-    .filter((playerId) => teamData.players[playerId].position.code === "G")
-    .filter(Boolean);
-
-const getGoalies = (teamData: TeamData): PlayerData[] => {
-  const goaliePlayerIds: string[] = getGoalieIds(teamData);
-  return goaliePlayerIds.map((goalieId) => teamData.players[goalieId]);
-};
-
-// Multiple goalies can play in one game, so all are returnedrf
+// Multiple goalies can play in one game, so all are returned
 export const getGoalieStats = (
-  team: "home" | "away",
-  data: IGameTeam
+  team: "awayTeam" | "homeTeam",
+  data: IGameBoxscore
 ): IGoalieStats[] => {
-  const goalies = getGoalies(data[team]);
+  if (!data.boxscore) {
+    console.log("Goalie has no boxscore", data);
+    return [];
+  }
+  const goalies = data.boxscore.playerByGameStats[team].goalies;
   return goalies.map((goalie) => {
     return {
-      decision: goalie.stats.goalieStats
-        ? goalie.stats.goalieStats.decision
-        : "",
-      name: goalie.person.fullName,
-      nationality: goalie.person.nationality,
-      saves: goalie.stats.goalieStats ? goalie.stats.goalieStats.saves : 0,
-      shots: goalie.stats.goalieStats ? goalie.stats.goalieStats.shots : 0,
-      savePercentage:
-        goalie.stats.goalieStats && goalie.stats.goalieStats.savePercentage
-          ? Number(goalie.stats.goalieStats.savePercentage.toFixed(2))
-          : 0,
-      timeOnIce: goalie.stats.goalieStats
-        ? goalie.stats.goalieStats.timeOnIce
-        : "00:00",
+      decision: "", // TODO: Where is this info now?
+      name: goalie.name.default,
+      nationality: "", // TODO: To detect Finnish players
+      saves: Number(goalie.saveShotsAgainst.split("/")[0]),
+      shots: Number(goalie.saveShotsAgainst.split("/")[1]),
+      savePercentage: Number((Number(goalie.savePctg) * 100).toFixed(2)),
+      timeOnIce: goalie.toi,
     };
   });
 };
 
-export const getPoints = (team: "home" | "away", data: IGameTeam) => {
-  const allPlayers = data[team].players;
-  return Object.keys(allPlayers)
-    .map((key) => {
-      const player = allPlayers[key];
-      const stats = player.stats.skaterStats
-        ? player.stats.skaterStats
-        : player.stats.goalieStats;
-      // Some skaters don't have any stats - skip them
-      if (!stats) return;
-      if (stats.goals === 0 && stats.assists === 0) return;
+export const getPoints = (
+  team: "homeTeam" | "awayTeam",
+  data: IGameBoxscore
+) => {
+  if (!data.boxscore) {
+    console.log("Skater has no boxscore", data);
+    return [];
+  }
+  const allPlayers = [
+    ...data.boxscore.playerByGameStats[team].forwards,
+    ...data.boxscore.playerByGameStats[team].defense,
+  ];
+  return allPlayers
+    .map((player) => {
+      if (player.goals === 0 && player.assists === 0) return;
       return {
-        assists: stats.assists,
-        goals: stats.goals,
-        name: player.person.fullName,
-        nationality: player.person.nationality,
-        points: stats.goals + stats.assists,
+        assists: player.assists,
+        goals: player.goals,
+        name: player.name.default,
+        nationality: "", // TODO: To detect Finns
+        points: player.points,
       };
     })
     .filter(Boolean)
