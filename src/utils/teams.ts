@@ -5,6 +5,41 @@ interface TeamColors {
   };
 }
 
+enum TeamNames {
+  ANA = "Anaheim Ducks",
+  ARI = "Arizona Coyotes",
+  BOS = "Boston Bruins",
+  BUF = "Buffalo Sabres",
+  CGY = "Calgary Flames",
+  CAR = "Carolina Hurricanes",
+  CHI = "Chicago Blackhawks",
+  COL = "Colorado Avalanche",
+  CBJ = "Columbus Blue Jackets",
+  DAL = "Dallas Stars",
+  DET = "Detroit Red Wings",
+  EDM = "Edmonton Oilers",
+  FLA = "Florida Panthers",
+  LAK = "Los Angeles Kings",
+  MIN = "Minnesota Wild",
+  MTL = "Montreal Canadiens",
+  NSH = "Nashville Predators",
+  NJD = "New Jersey Devils",
+  NYI = "New York Islanders",
+  NYR = "New York Rangers",
+  OTT = "Ottawa Senators",
+  PHI = "Philadelphia Flyers",
+  PIT = "Pittsburgh Penguins",
+  SJS = "San Jose Sharks",
+  SEA = "Seattle Kraken",
+  STL = "St Louis Blues",
+  TBL = "Tampa Bay Lightning",
+  TOR = "Toronto Maple Leafs",
+  VAN = "Vancouver Canucks",
+  VGK = "Vegas Golden Knights",
+  WSH = "Washington Capitals",
+  WPG = "Winnipeg Jets",
+}
+
 const colors: TeamColors = {
   ANA: { bottom: "#e43603", top: "black" },
   ARI: { bottom: "black", top: "maroon" },
@@ -48,8 +83,9 @@ const getColorsForTeam = (teamName: string) => {
 };
 
 export const getTeamColorCss = (teamName: string) => {
-  console.log("teamname", teamName);
-  const normalized = teamName.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const { topColor, bottomColor } = getColorsForTeam(normalized);
+  const { topColor, bottomColor } = getColorsForTeam(teamName);
   return `linear-gradient(${topColor}, ${bottomColor})`;
 };
+
+export const getTeamByAbbrev = (teamAbbrev: string): string =>
+  TeamNames[teamAbbrev as keyof typeof TeamNames];
