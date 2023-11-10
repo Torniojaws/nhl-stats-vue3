@@ -1,33 +1,36 @@
 import type { IGameBoxscore } from "../types/team";
-import type { IGoalieStats } from "../types/players";
+import type { IGoalieStats, IPlayerStats } from "../types/players";
 
 // Multiple goalies can play in one game, so all are returned
-export const getGoalieStats = (
+export const getGoalieStats = async (
   team: "awayTeam" | "homeTeam",
   data: IGameBoxscore
-): IGoalieStats[] => {
+): Promise<IGoalieStats[]> => {
   if (!data.boxscore) {
     console.log("Goalie has no boxscore", data);
     return [];
   }
   const goalies = data.boxscore.playerByGameStats[team].goalies;
-  return goalies.map((goalie) => {
-    return {
+  const goalieStats: IGoalieStats[] = [];
+  for (const goalie of goalies) {
+    const goalieStat: IGoalieStats = {
       decision: "", // TODO: Where is this info now?
       name: goalie.name.default,
-      nationality: "", // TODO: To detect Finnish players
+      nationality: "", // This is available in https://api-web.nhle.com/v1/player/:playerId/landing, but extremely slow
       saves: Number(goalie.saveShotsAgainst.split("/")[0]),
       shots: Number(goalie.saveShotsAgainst.split("/")[1]),
-      savePercentage: Number((Number(goalie.savePctg) * 100).toFixed(2)),
+      savePercentage: Number((Number(goalie.savePctg ?? 0) * 100).toFixed(2)),
       timeOnIce: goalie.toi,
     };
-  });
+    goalieStats.push(goalieStat);
+  }
+  return goalieStats;
 };
 
-export const getPoints = (
+export const getPoints = async (
   team: "homeTeam" | "awayTeam",
   data: IGameBoxscore
-) => {
+): Promise<IPlayerStats[]> => {
   if (!data.boxscore) {
     console.log("Skater has no boxscore", data);
     return [];
@@ -36,17 +39,19 @@ export const getPoints = (
     ...data.boxscore.playerByGameStats[team].forwards,
     ...data.boxscore.playerByGameStats[team].defense,
   ];
-  return allPlayers
-    .map((player) => {
-      if (player.goals === 0 && player.assists === 0) return;
-      return {
-        assists: player.assists,
-        goals: player.goals,
-        name: player.name.default,
-        nationality: "", // TODO: To detect Finns
-        points: player.points,
-      };
-    })
-    .filter(Boolean)
-    .sort((a, b) => b!.points - a!.points || b!.goals - a!.goals); // First by points, and if equal, by goals
+  const playerStats: IPlayerStats[] = [];
+  for (const player of allPlayers) {
+    if (player.goals === 0 && player.assists === 0) continue;
+    const playerStat: IPlayerStats = {
+      assists: player.assists,
+      goals: player.goals,
+      name: player.name.default,
+      nationality: "", // This is available in https://api-web.nhle.com/v1/player/:playerId/landing, but extremely slow
+      points: player.points,
+    };
+    playerStats.push(playerStat);
+  }
+  return playerStats.sort(
+    (a, b) => b!.points - a!.points || b!.goals - a!.goals
+  ); // First by points, and if equal, by goals;
 };
