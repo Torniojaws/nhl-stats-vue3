@@ -4,7 +4,8 @@ import type { IGoalieStats, IPlayerStats } from "../types/players";
 // Multiple goalies can play in one game, so all are returned
 export const getGoalieStats = async (
   team: "awayTeam" | "homeTeam",
-  data: IGameBoxscore
+  data: IGameBoxscore,
+  teamAbbrev: string
 ): Promise<IGoalieStats[]> => {
   if (!data.boxscore) {
     console.log("Goalie has no boxscore", data);
@@ -21,6 +22,7 @@ export const getGoalieStats = async (
       shots: Number(goalie.saveShotsAgainst.split("/")[1]),
       savePercentage: Number((Number(goalie.savePctg ?? 0) * 100).toFixed(2)),
       timeOnIce: goalie.toi,
+      teamAbbrev,
     };
     goalieStats.push(goalieStat);
   }
@@ -29,7 +31,8 @@ export const getGoalieStats = async (
 
 export const getPoints = async (
   team: "homeTeam" | "awayTeam",
-  data: IGameBoxscore
+  data: IGameBoxscore,
+  teamAbbrev: string
 ): Promise<IPlayerStats[]> => {
   if (!data.boxscore) {
     console.log("Skater has no boxscore", data);
@@ -48,6 +51,7 @@ export const getPoints = async (
       name: player.name.default,
       nationality: "", // This is available in https://api-web.nhle.com/v1/player/:playerId/landing, but extremely slow
       points: player.points,
+      teamAbbrev,
     };
     playerStats.push(playerStat);
   }

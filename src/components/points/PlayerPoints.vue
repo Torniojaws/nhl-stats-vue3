@@ -6,7 +6,9 @@ export default defineComponent({
   data() {
     return {
       isEven: this.index % 2 === 0,
-      isFinnish: finnishNames.includes(this.player.name),
+      isFinnish:
+        finnishNames.includes(this.player.name) &&
+        this.player.teamAbbrev !== "NYI", // To not mark the other Sebastian Aho as Finnish
     };
   },
 });

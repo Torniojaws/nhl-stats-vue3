@@ -6,6 +6,7 @@ export interface IGoalieStats {
   shots: number;
   savePercentage: number;
   timeOnIce: string;
+  teamAbbrev: string;
 }
 
 export interface IPlayerStats {
@@ -14,6 +15,7 @@ export interface IPlayerStats {
   name: string;
   nationality: string;
   points: number;
+  teamAbbrev: string;
 }
 
 export interface IPlayerData {

@@ -29,15 +29,17 @@ const parsedResults = async (
   const gamesResults = await getAllGames(games);
   const parsedGames: IParsedGameData[] = [];
   for (const gameResult of gamesResults) {
+    const awayTeamAbbrev = gameResult.awayTeam.abbrev;
+    const homeTeamAbbrev = gameResult.homeTeam.abbrev;
     const parsedGame: IParsedGameData = {
       game: games.find((game) => game.id === gameResult.id),
       away: {
-        goalies: await getGoalieStats("awayTeam", gameResult),
-        points: await getPoints("awayTeam", gameResult),
+        goalies: await getGoalieStats("awayTeam", gameResult, awayTeamAbbrev),
+        points: await getPoints("awayTeam", gameResult, awayTeamAbbrev),
       },
       home: {
-        goalies: await getGoalieStats("homeTeam", gameResult),
-        points: await getPoints("homeTeam", gameResult),
+        goalies: await getGoalieStats("homeTeam", gameResult, homeTeamAbbrev),
+        points: await getPoints("homeTeam", gameResult, homeTeamAbbrev),
       },
     };
     parsedGames.push(parsedGame);

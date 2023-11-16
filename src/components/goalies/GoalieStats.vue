@@ -1,11 +1,12 @@
 <script lang="ts">
 import { defineComponent } from "vue";
+import { finnishNames } from "../../utils/players";
 export default defineComponent({
   props: ["goalie", "index"],
   data() {
     return {
       isEven: this.index % 2 === 0,
-      isFinnish: this.goalie.nationality.toLowerCase() === "fin",
+      isFinnish: finnishNames.includes(this.goalie.name),
     };
   },
 });
