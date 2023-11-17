@@ -99,4 +99,5 @@ export const finnishNames = [
   "E. Tolvanen",
   "U. Vaakanainen",
   "J. Valimaki",
+  "J. Ylönen",
 ];
