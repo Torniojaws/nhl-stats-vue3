@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+npm run build
 cd dist/
 cp -r * ../../Torniojaws.github.io/
 cd ../../Torniojaws.github.io/
