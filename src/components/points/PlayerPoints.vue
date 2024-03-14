@@ -1,20 +1,23 @@
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent } from "vue";
+import { finnishNames } from "../../utils/players";
 export default defineComponent({
-  props: ['player', 'index'],
+  props: ["player", "index"],
   data() {
     return {
       isEven: this.index % 2 === 0,
-      isFinnish: this.player.nationality.toLowerCase() === 'fin'
-    }
-  }
-})
+      isFinnish:
+        finnishNames.includes(this.player.name) &&
+        this.player.teamAbbrev !== "NYI", // To not mark the other Sebastian Aho as Finnish
+    };
+  },
+});
 </script>
 
 <template>
-  <div class='playerRow' :class='{ alternate: !isEven, finnish: isFinnish }'>
-    <div class='playerName'>{{ player.name }}</div>
-    <div class='playerPoints'>{{ player.goals }}+{{ player.assists }}={{ player.points }}</div>
+  <div class="playerRow" :class="{ alternate: !isEven, finnish: isFinnish }">
+    <div class="playerName">{{ player.name }}</div>
+    <div>{{ player.goals }}+{{ player.assists }}={{ player.points }}</div>
   </div>
 </template>
 
@@ -29,8 +32,7 @@ export default defineComponent({
 .playerName {
   width: 70%;
 }
-.playerPoints {
-}
+
 .playerRow {
   display: flex;
   font-size: 0.9em;

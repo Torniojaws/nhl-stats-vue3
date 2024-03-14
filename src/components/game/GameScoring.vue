@@ -1,21 +1,31 @@
 <script lang="ts">
-import PlayerPoints from '../points/PlayerPoints.vue';
+import PlayerPoints from "../points/PlayerPoints.vue";
 export default {
   components: {
     PlayerPoints,
   },
-  props: ['away', 'game', 'home'],
-}
+  props: ["away", "game", "home"],
+};
 </script>
 
 <template>
-  <div class='scoringResults'>
-    <div class='scorers'>
-      <PlayerPoints v-for='(player, i) in home.points' :player='player' :index='i' />
+  <div class="scoringResults">
+    <div class="scorers">
+      <PlayerPoints
+        v-for="(player, i) in home.points"
+        :player="player"
+        :index="i"
+        :key="i"
+      />
     </div>
-    <div class='divider' />
-    <div class='scorers'>
-      <PlayerPoints v-for='(player, i) in away.points' :player='player' :index='i' />
+    <div class="divider" />
+    <div class="scorers">
+      <PlayerPoints
+        v-for="(player, i) in away.points"
+        :player="player"
+        :index="i"
+        :key="i"
+      />
     </div>
   </div>
 </template>

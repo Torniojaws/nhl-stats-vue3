@@ -1,25 +1,25 @@
 import type { IGameData, IParsedGameData } from "../types/game";
-import type { IGameTeam } from "../types/team";
+import type { IGameBoxscore } from "../types/team";
 import { getGoalieStats, getPoints } from "../utils/players";
 import { yesterday } from "../utils/dates";
 
+const proxy = "https://corsproxy.io/?";
+
 const getGamesOnDate = async (date: string) =>
-  fetch(`https://statsapi.web.nhl.com/api/v1/schedule?date=${date}`)
+  fetch(`${proxy}https://api-web.nhle.com/v1/schedule/${date}`)
     .then((response) => response.json())
-    .then((data) => data.dates[0].games)
+    .then((data) => data.gameWeek[0].games)
     .catch((err) => err);
 
-const getGameResult = (gamePk: number) =>
-  fetch(`https://statsapi.web.nhl.com/api/v1/game/${gamePk}/boxscore`)
+const getGameResult = async (gameId: number): Promise<IGameBoxscore> =>
+  fetch(`${proxy}https://api-web.nhle.com/v1/gamecenter/${gameId}/boxscore`)
     .then((response) => response.json())
-    .then((data) => {
-      return { gamePk, ...data.teams };
-    })
+    .then((data) => data)
     .catch((err) => err);
 
-const getAllGames = async (games: IGameData[]): Promise<IGameTeam[]> => {
+const getAllGames = async (games: IGameData[]): Promise<IGameBoxscore[]> => {
   if (!games.length) return [];
-  const promises = games.map((game) => getGameResult(game.gamePk));
+  const promises = games.map((game) => getGameResult(game.id));
   return Promise.all(promises);
 };
 
@@ -27,19 +27,24 @@ const parsedResults = async (
   games: IGameData[]
 ): Promise<IParsedGameData[]> => {
   const gamesResults = await getAllGames(games);
-  return gamesResults.map((gameResult) => {
-    return {
-      game: games.find((game) => game.gamePk === gameResult.gamePk),
+  const parsedGames: IParsedGameData[] = [];
+  for (const gameResult of gamesResults) {
+    const awayTeamAbbrev = gameResult.awayTeam.abbrev;
+    const homeTeamAbbrev = gameResult.homeTeam.abbrev;
+    const parsedGame: IParsedGameData = {
+      game: games.find((game) => game.id === gameResult.id),
       away: {
-        goalies: getGoalieStats("away", gameResult),
-        points: getPoints("away", gameResult),
+        goalies: await getGoalieStats("awayTeam", gameResult, awayTeamAbbrev),
+        points: await getPoints("awayTeam", gameResult, awayTeamAbbrev),
       },
       home: {
-        goalies: getGoalieStats("home", gameResult),
-        points: getPoints("home", gameResult),
+        goalies: await getGoalieStats("homeTeam", gameResult, homeTeamAbbrev),
+        points: await getPoints("homeTeam", gameResult, homeTeamAbbrev),
       },
     };
-  });
+    parsedGames.push(parsedGame);
+  }
+  return parsedGames;
 };
 
 export const getLastNightGamesResults = async (): Promise<

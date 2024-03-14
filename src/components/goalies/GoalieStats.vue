@@ -1,20 +1,25 @@
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent } from "vue";
+import { finnishNames } from "../../utils/players";
 export default defineComponent({
-  props: ['goalie', 'index'],
+  props: ["goalie", "index"],
   data() {
     return {
       isEven: this.index % 2 === 0,
-      isFinnish: this.goalie.nationality.toLowerCase() === 'fin'
-    }
-  }
-})
+      isFinnish: finnishNames.includes(this.goalie.name),
+    };
+  },
+});
 </script>
 
 <template>
-  <div class='goalieRow' :class='{ alternate: !isEven, finnish: isFinnish }'>
-    <div class='goalieName'>{{ goalie.name }}</div>
-    <div class='goalieGame'>{{ goalie.decision }} ({{ goalie.timeOnIce }}), {{ goalie.saves }}/{{ goalie.shots }}, {{ goalie.savePercentage }}%</div>
+  <div class="goalieRow" :class="{ alternate: !isEven, finnish: isFinnish }">
+    <div>{{ goalie.name }}</div>
+    <div>
+      {{ goalie.decision }} ({{ goalie.timeOnIce }}), {{ goalie.saves }}/{{
+        goalie.shots
+      }}, {{ goalie.savePercentage }}%
+    </div>
   </div>
 </template>
 
@@ -26,11 +31,7 @@ export default defineComponent({
   color: rgb(0, 162, 232);
   font-weight: bold;
 }
-.goalieName {
-  
-}
-.goalieStats {
-}
+
 .goalieRow {
   display: flex;
   flex-direction: column;

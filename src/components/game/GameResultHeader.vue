@@ -1,26 +1,41 @@
 <script lang="ts">
-import { defineComponent } from 'vue';
-import { getTeamColorCss } from '../../utils/teams';
+import { defineComponent } from "vue";
+import { getTeamByAbbrev, getTeamColorCss } from "../../utils/teams";
 export default defineComponent({
-  props: ['away', 'game', 'home'],
+  props: ["away", "game", "home"],
   methods: {
-    getTeamBackground: (teamName: string) => getTeamColorCss(teamName)
+    getTeamBackground: (teamName: any) => getTeamColorCss(teamName),
+    getTeamName: (teamAbbrev: string) => getTeamByAbbrev(teamAbbrev),
   },
   data() {
     return {
-      isGameInProgress: this.game.status.abstractGameState !== 'Final'
-    }
-  }
-})
+      isGameInProgress: this.game.gameState === "LIVE",
+    };
+  },
+});
 </script>
 
 <template>
-  <header class='gameResult'>
-    <div class='teamName' :style='{ background: getTeamBackground(game.teams.home.team.name) }'>{{ game.teams.home.team.name }}</div>
-    <div class='gameScore' :class='{ gameUnfinished: isGameInProgress }'>{{ game.teams.home.score }} - {{ game.teams.away.score }}</div>
-    <div class='teamName' :style='{ background: getTeamBackground(game.teams.away.team.name) }'>{{ game.teams.away.team.name }}</div>
+  <header class="gameResult">
+    <div
+      class="teamName"
+      :style="{ background: getTeamBackground(game.homeTeam.abbrev) }"
+    >
+      {{ getTeamName(game.homeTeam.abbrev) }}
+    </div>
+    <div class="gameScore" :class="{ gameUnfinished: isGameInProgress }">
+      {{ game.homeTeam.score }} - {{ game.awayTeam.score }}
+    </div>
+    <div
+      class="teamName"
+      :style="{ background: getTeamBackground(game.awayTeam.abbrev) }"
+    >
+      {{ getTeamName(game.awayTeam.abbrev) }}
+    </div>
   </header>
-  <div class='gameUnfinished centerText' :class='{ hidden: !isGameInProgress }'>Game in progress</div>
+  <div class="gameUnfinished centerText" :class="{ hidden: !isGameInProgress }">
+    Game in progress
+  </div>
 </template>
 
 <style scoped>

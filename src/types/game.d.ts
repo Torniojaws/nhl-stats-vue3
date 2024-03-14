@@ -1,32 +1,19 @@
 import type { IGoalieStats, IPlayerPoints } from "./players";
 
 interface Team {
-  leagueRecord: {
-    wins: number;
-    losses: number;
-    ot: number;
-    type: string;
+  id: number;
+  placeName: {
+    default: string;
   };
+  abbrev: string;
   score: number;
-  team: {
-    id: number;
-    name: string;
-    link: string;
-  };
-}
-
-interface GameStatus {
-  abstractGameStatus: string;
-  detailedState: string;
 }
 
 export interface IGameData {
-  gamePk: number;
-  status: GameStatus;
-  teams: {
-    away: Team;
-    home: Team;
-  };
+  id: number;
+  gameState: "OFF" | "LIVE" | string;
+  awayTeam: Team;
+  homeTeam: Team;
 }
 
 interface Stats {
@@ -35,7 +22,7 @@ interface Stats {
 }
 
 export interface IParsedGameData {
-  game: any;
+  game: IGameData | undefined;
   away: Stats;
   home: Stats;
 }

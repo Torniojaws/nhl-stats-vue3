@@ -1,11 +1,12 @@
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent } from "vue";
 import GameDetails from "./game/GameDetails.vue";
 import { getLastNightGamesResults } from "../api";
-import { yesterday } from '../utils/dates';
+import { yesterday } from "../utils/dates";
+import type { IParsedGameData } from "@/types/game";
 
 interface StateData {
-  games: any[];
+  games: IParsedGameData[];
   yesterday: string;
   isLoading: boolean;
 }
@@ -17,7 +18,7 @@ export default defineComponent({
   data(): StateData {
     return {
       games: [],
-      yesterday: '',
+      yesterday: "",
       isLoading: true,
     };
   },
@@ -30,19 +31,19 @@ export default defineComponent({
 </script>
 
 <template>
-  <div v-if="games" id='games'>
+  <div v-if="games" id="games">
     <GameDetails
       v-for="(game, i) in games"
       :key="i"
-      :game='game.game'
+      :game="game.game"
       :away="game.away"
       :home="game.home"
     />
   </div>
-  <div v-if='isLoading' id='spinnerContainer'>
-    <img :src="`spinner.gif`" id='spinner'/>
+  <div v-if="isLoading" id="spinnerContainer">
+    <img :src="`spinner.gif`" id="spinner" />
   </div>
-  <div v-if='!isLoading && games.length === 0' id='noGames'>
+  <div v-if="!isLoading && games.length === 0" id="noGames">
     <p>No games last night ({{ yesterday }})</p>
   </div>
 </template>

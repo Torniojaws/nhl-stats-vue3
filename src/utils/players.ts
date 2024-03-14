@@ -1,61 +1,114 @@
-import type { IGameTeam, TeamData, PlayerData } from "../types/team";
-import type { IGoalieStats } from "../types/players";
+import type { IGameBoxscore } from "../types/team";
+import type { IGoalieStats, IPlayerStats } from "../types/players";
 
-const getGoalieIds = (teamData: TeamData) =>
-  Object.keys(teamData.players)
-    .filter((playerId) => teamData.players[playerId].position.code === "G")
-    .filter(Boolean);
-
-const getGoalies = (teamData: TeamData): PlayerData[] => {
-  const goaliePlayerIds: string[] = getGoalieIds(teamData);
-  return goaliePlayerIds.map((goalieId) => teamData.players[goalieId]);
-};
-
-// Multiple goalies can play in one game, so all are returnedrf
-export const getGoalieStats = (
-  team: "home" | "away",
-  data: IGameTeam
-): IGoalieStats[] => {
-  const goalies = getGoalies(data[team]);
-  return goalies.map((goalie) => {
-    return {
-      decision: goalie.stats.goalieStats
-        ? goalie.stats.goalieStats.decision
-        : "",
-      name: goalie.person.fullName,
-      nationality: goalie.person.nationality,
-      saves: goalie.stats.goalieStats ? goalie.stats.goalieStats.saves : 0,
-      shots: goalie.stats.goalieStats ? goalie.stats.goalieStats.shots : 0,
-      savePercentage:
-        goalie.stats.goalieStats && goalie.stats.goalieStats.savePercentage
-          ? Number(goalie.stats.goalieStats.savePercentage.toFixed(2))
-          : 0,
-      timeOnIce: goalie.stats.goalieStats
-        ? goalie.stats.goalieStats.timeOnIce
-        : "00:00",
+// Multiple goalies can play in one game, so all are returned
+export const getGoalieStats = async (
+  team: "awayTeam" | "homeTeam",
+  data: IGameBoxscore,
+  teamAbbrev: string
+): Promise<IGoalieStats[]> => {
+  if (!data.boxscore) {
+    console.log("Goalie has no boxscore", data);
+    return [];
+  }
+  const goalies = data.boxscore.playerByGameStats[team].goalies;
+  const goalieStats: IGoalieStats[] = [];
+  for (const goalie of goalies) {
+    const goalieStat: IGoalieStats = {
+      decision: "", // TODO: Where is this info now?
+      name: goalie.name.default,
+      nationality: "", // This is available in https://api-web.nhle.com/v1/player/:playerId/landing, but extremely slow
+      saves: Number(goalie.saveShotsAgainst.split("/")[0]),
+      shots: Number(goalie.saveShotsAgainst.split("/")[1]),
+      savePercentage: Number((Number(goalie.savePctg ?? 0) * 100).toFixed(2)),
+      timeOnIce: goalie.toi,
+      teamAbbrev,
     };
-  });
+    goalieStats.push(goalieStat);
+  }
+  return goalieStats;
 };
 
-export const getPoints = (team: "home" | "away", data: IGameTeam) => {
-  const allPlayers = data[team].players;
-  return Object.keys(allPlayers)
-    .map((key) => {
-      const player = allPlayers[key];
-      const stats = player.stats.skaterStats
-        ? player.stats.skaterStats
-        : player.stats.goalieStats;
-      // Some skaters don't have any stats - skip them
-      if (!stats) return;
-      if (stats.goals === 0 && stats.assists === 0) return;
-      return {
-        assists: stats.assists,
-        goals: stats.goals,
-        name: player.person.fullName,
-        nationality: player.person.nationality,
-        points: stats.goals + stats.assists,
-      };
-    })
-    .filter(Boolean)
-    .sort((a, b) => b!.points - a!.points || b!.goals - a!.goals); // First by points, and if equal, by goals
+export const getPoints = async (
+  team: "homeTeam" | "awayTeam",
+  data: IGameBoxscore,
+  teamAbbrev: string
+): Promise<IPlayerStats[]> => {
+  if (!data.boxscore) {
+    console.log("Skater has no boxscore", data);
+    return [];
+  }
+  const allPlayers = [
+    ...data.boxscore.playerByGameStats[team].forwards,
+    ...data.boxscore.playerByGameStats[team].defense,
+  ];
+  const playerStats: IPlayerStats[] = [];
+  for (const player of allPlayers) {
+    if (player.goals === 0 && player.assists === 0) continue;
+    const playerStat: IPlayerStats = {
+      assists: player.assists,
+      goals: player.goals,
+      name: player.name.default,
+      nationality: "", // This is available in https://api-web.nhle.com/v1/player/:playerId/landing, but extremely slow
+      points: player.points,
+      teamAbbrev,
+    };
+    playerStats.push(playerStat);
+  }
+  return playerStats.sort(
+    (a, b) => b!.points - a!.points || b!.goals - a!.goals
+  ); // First by points, and if equal, by goals;
 };
+
+// The new API doesn't provide player nationalities, so this is a simple alternative
+export const finnishNames = [
+  "S. Aho",
+  "J. Annunen",
+  "J. Armia",
+  "A. Barkov",
+  "J. Blomqvist",
+  "M. Granlund",
+  "J. Hakanpaa",
+  "E. Haula",
+  "M. Heiskanen",
+  "R. Hintz",
+  "V. Husso",
+  "R. Jarventie",
+  "H. Jokiharju",
+  "K. Kahkonen",
+  "K. Kakko",
+  "K. Kapanen",
+  "S. Kinnunen",
+  "J. Kiviranta",
+  "J. Korpisalo",
+  "J. Kotkaniemi",
+  "R. Kupari",
+  "P. Laine",
+  "B. Lambert",
+  "K. Lankinen",
+  "A. Lehkonen",
+  "E. Lindell",
+  "E. Luostarinen",
+  "U. Luukkonen",
+  "A. Lundell",
+  "O. Maatta",
+  "M. Maccelli",
+  "W. Merela",
+  "N. Mikkola",
+  "T. Niemela",
+  "M. Niemelainen",
+  "J. Parssinen",
+  "M. Pyyhtia",
+  "V. Puustinen",
+  "A. Raanta",
+  "M. Rantanen",
+  "A. Raty",
+  "R. Ristolainen",
+  "J. Saros",
+  "T. Teravainen",
+  "S. Tuomaala",
+  "E. Tolvanen",
+  "U. Vaakanainen",
+  "J. Valimaki",
+  "J. Ylönen",
+];
