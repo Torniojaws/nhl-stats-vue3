@@ -35,6 +35,7 @@ interface TeamInfo {
 }
 
 export interface IPlayerByGameStats {
+  id: number; // Game ID
   awayTeam: TeamInfo;
   homeTeam: TeamInfo;
   playerByGameStats: {
