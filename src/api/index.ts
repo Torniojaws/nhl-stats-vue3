@@ -1,5 +1,5 @@
 import type { IGameData, IParsedGameData } from "../types/game";
-import type { IGameBoxscore } from "../types/team";
+import type { IPlayerByGameStats } from "../types/team";
 import { getGoalieStats, getPoints } from "../utils/players";
 import { yesterday } from "../utils/dates";
 
@@ -11,13 +11,15 @@ const getGamesOnDate = async (date: string) =>
     .then((data) => data.gameWeek[0].games)
     .catch((err) => err);
 
-const getGameResult = async (gameId: number): Promise<IGameBoxscore> =>
+const getGameResult = async (gameId: number): Promise<IPlayerByGameStats> =>
   fetch(`${proxy}https://api-web.nhle.com/v1/gamecenter/${gameId}/boxscore`)
     .then((response) => response.json())
     .then((data) => data)
     .catch((err) => err);
 
-const getAllGames = async (games: IGameData[]): Promise<IGameBoxscore[]> => {
+const getAllGames = async (
+  games: IGameData[]
+): Promise<IPlayerByGameStats[]> => {
   if (!games.length) return [];
   const promises = games.map((game) => getGameResult(game.id));
   return Promise.all(promises);

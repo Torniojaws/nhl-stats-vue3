@@ -34,16 +34,11 @@ interface TeamInfo {
   sog: number;
 }
 
-interface Boxscore {
+export interface IPlayerByGameStats {
+  awayTeam: TeamInfo;
+  homeTeam: TeamInfo;
   playerByGameStats: {
     awayTeam: GameStats;
     homeTeam: GameStats;
   };
-}
-
-export interface IGameBoxscore {
-  id: number;
-  awayTeam: TeamInfo;
-  homeTeam: TeamInfo;
-  boxscore: Boxscore;
 }

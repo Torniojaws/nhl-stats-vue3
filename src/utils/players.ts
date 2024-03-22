@@ -1,17 +1,17 @@
-import type { IGameBoxscore } from "../types/team";
+import type { IPlayerByGameStats } from "../types/team";
 import type { IGoalieStats, IPlayerStats } from "../types/players";
 
 // Multiple goalies can play in one game, so all are returned
 export const getGoalieStats = async (
   team: "awayTeam" | "homeTeam",
-  data: IGameBoxscore,
+  data: IPlayerByGameStats,
   teamAbbrev: string
 ): Promise<IGoalieStats[]> => {
-  if (!data.boxscore) {
-    console.log("Goalie has no boxscore", data);
+  if (!data.playerByGameStats) {
+    console.log("Goalie has no playerByGameStats", data);
     return [];
   }
-  const goalies = data.boxscore.playerByGameStats[team].goalies;
+  const goalies = data.playerByGameStats[team].goalies;
   const goalieStats: IGoalieStats[] = [];
   for (const goalie of goalies) {
     const goalieStat: IGoalieStats = {
@@ -31,16 +31,16 @@ export const getGoalieStats = async (
 
 export const getPoints = async (
   team: "homeTeam" | "awayTeam",
-  data: IGameBoxscore,
+  data: IPlayerByGameStats,
   teamAbbrev: string
 ): Promise<IPlayerStats[]> => {
-  if (!data.boxscore) {
-    console.log("Skater has no boxscore", data);
+  if (!data.playerByGameStats) {
+    console.log("Skater has no playerByGameStats", data);
     return [];
   }
   const allPlayers = [
-    ...data.boxscore.playerByGameStats[team].forwards,
-    ...data.boxscore.playerByGameStats[team].defense,
+    ...data.playerByGameStats[team].forwards,
+    ...data.playerByGameStats[team].defense,
   ];
   const playerStats: IPlayerStats[] = [];
   for (const player of allPlayers) {
