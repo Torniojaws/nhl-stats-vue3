@@ -93,6 +93,7 @@ export const finnishNames = [
   "K. Kapanen",
   "O. Kapanen",
   "A. Kaskimaki",
+  "K. Kaskisuo",
   "J. Kemell",
   "S. Kinnunen",
   "J. Kiviranta",
