@@ -10,6 +10,7 @@ export default defineComponent({
   data() {
     return {
       isGameInProgress: this.game.gameState === "LIVE",
+      isGameCancelled: this.game.gameScheduleState === "CNCL",
     };
   },
 });
@@ -35,6 +36,9 @@ export default defineComponent({
   </header>
   <div class="gameUnfinished centerText" :class="{ hidden: !isGameInProgress }">
     Game in progress
+  </div>
+  <div class="gameUnfinished centerText" :class="{ hidden: !isGameCancelled }">
+    Game has been cancelled
   </div>
 </template>
 
@@ -65,6 +69,10 @@ export default defineComponent({
 }
 .gameUnfinished {
   background-color: rgb(243, 228, 124);
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  min-height: 32px;
 }
 .teamName {
   background: linear-gradient(0deg, blue, black 40%, red);
