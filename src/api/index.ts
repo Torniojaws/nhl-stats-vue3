@@ -3,7 +3,7 @@ import type { IPlayerByGameStats } from "../types/team";
 import { getGoalieStats, getPoints } from "../utils/players";
 import { yesterday } from "../utils/dates";
 
-const proxy = "https://corsproxy.io/?";
+const proxy = "https://corsproxy.io/?url=";
 
 const getGamesOnDate = async (date: string) =>
   fetch(`${proxy}https://api-web.nhle.com/v1/schedule/${date}`)
