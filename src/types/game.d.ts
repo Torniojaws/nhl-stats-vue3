@@ -14,6 +14,14 @@ export interface IGameData {
   gameState: "OFF" | "LIVE" | string;
   awayTeam: Team;
   homeTeam: Team;
+  seriesStatus: IPlayoffSeries | undefined;
+}
+
+export interface IPlayoffSeries {
+  topSeedTeamAbbrev: string;
+  topSeedWins: number;
+  bottomSeedTeamAbbrev: string;
+  bottomSeedWins: number;
 }
 
 interface Stats {
