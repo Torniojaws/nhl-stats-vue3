@@ -95,12 +95,27 @@ export default defineComponent({
   display: flex;
   font-size: 1.5em;
   justify-content: center;
-  width: 20%;
+  width: 75px;
+  padding: 0 4px;
+  white-space: nowrap;
 }
-@media all and (min-width: 1000px) {
+@media all and (max-width: 600px) {
   .gameScore {
-    padding-left: 8px;
-    padding-right: 8px;
+    font-size: 1.2em;
+  }
+}
+@media all and (max-width: 430px) {
+  .gameScore {
+    font-size: 1em;
+    width: 50px;
+    padding: 0 2px;
+  }
+}
+@media all and (max-width: 400px) {
+  .gameScore {
+    font-size: 1em;
+    width: 50px;
+    padding: 0 2px;
   }
 }
 .gameUnfinished {

@@ -51,6 +51,9 @@ export default defineComponent({
 <style scoped>
 div#games {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 div#noGames {
   flex: 1;

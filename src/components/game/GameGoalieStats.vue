@@ -32,7 +32,14 @@ export default {
 
 <style scoped>
 .divider {
-  width: 20%;
+  width: 75px;
+  padding: 0 4px;
+}
+@media all and (max-width: 430px) {
+  .divider {
+    width: 50px;
+    padding: 0 2px;
+  }
 }
 .goalies {
   min-height: 32px;

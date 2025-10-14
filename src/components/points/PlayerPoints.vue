@@ -30,11 +30,16 @@ export default defineComponent({
   font-weight: bold;
 }
 .playerName {
-  width: 70%;
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .playerRow {
   display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   font-size: 0.9em;
 }
 </style>
