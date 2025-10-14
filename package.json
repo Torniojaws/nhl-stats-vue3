@@ -1,6 +1,6 @@
 {
   "name": "nhl-stats-vue3",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "scripts": {
     "deploy": "npm run build && ./deploy.sh",
     "dev": "vite",
