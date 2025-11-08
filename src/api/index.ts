@@ -1,7 +1,7 @@
 import type { IGameData, IParsedGameData } from "../types/game";
 import type { IPlayerByGameStats } from "../types/team";
 import { getGoalieStats, getPoints } from "../utils/players";
-import { yesterday } from "../utils/dates";
+import { today, yesterday } from "../utils/dates";
 
 const proxy = "https://corsproxy.io/?url=";
 
@@ -53,5 +53,13 @@ export const getLastNightGamesResults = async (): Promise<
   IParsedGameData[]
 > => {
   const gamesLastNight = await getGamesOnDate(yesterday);
+  const gamesToday = await getGamesOnDate(today);
+  // Merge today's games that have started
+  for (const game of gamesToday) {
+   
+    if (game.gameState == "LIVE" || game.gameState == "FINAL") {
+      gamesLastNight.push(game);
+    }
+  }
   return parsedResults(gamesLastNight);
 };
