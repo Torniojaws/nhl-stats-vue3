@@ -126,6 +126,7 @@ export const finnishNames = [
   "N. Matinpalo",
   "W. Merela",
   "L. Merilainen",
+  "L. Meriläinen",
   "N. Mikkola",
   "T. Niemela",
   "M. Niemelainen",
