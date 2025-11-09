@@ -56,10 +56,9 @@ export const getLastNightGamesResults = async (): Promise<
   const gamesToday = await getGamesOnDate(today);
   // Merge today's games that have started
   for (const game of gamesToday) {
-    if (game.gameState == "LIVE" || game.gameState == "FINAL" || game.gameState == "OFF") {
+    if (!['FUT', 'PRE'].includes(game.gameState)) {
       gamesLastNight.push(game);
     }
   }
-  console.log('all games from last night and today:', gamesLastNight);
   return parsedResults(gamesLastNight);
 };
