@@ -60,5 +60,11 @@ export const getLastNightGamesResults = async (): Promise<
       gamesLastNight.push(game);
     }
   }
+  // Show in progress games on top. When gameState is "LIVE", the game is in progress
+  gamesLastNight.sort((a: { gameState: string; }, b: { gameState: string; }) => {
+    if (a.gameState === 'LIVE' && b.gameState !== 'LIVE') return -1;
+    if (a.gameState !== 'LIVE' && b.gameState === 'LIVE') return 1;
+    return 0;
+  });
   return parsedResults(gamesLastNight);
 };
