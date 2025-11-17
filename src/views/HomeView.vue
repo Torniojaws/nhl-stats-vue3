@@ -3,7 +3,5 @@ import GamesLastNight from "../components/GamesLastNight.vue";
 </script>
 
 <template>
-  <Suspense>
-    <GamesLastNight />
-  </Suspense>
+  <GamesLastNight />
 </template>

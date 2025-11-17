@@ -1,6 +1,8 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import PlayerPoints from "../components/points/PlayerPoints.vue";
+import LoadingSpinner from "../components/LoadingSpinner.vue";
+import { finnishNames } from "../utils/players";
 
 interface SkaterLeader {
   id: number;
@@ -50,6 +52,7 @@ interface PlayerData {
   goals: number;
   assists: number;
   points: number;
+  isFinnish?: boolean;
 }
 
 interface StateData {
@@ -60,6 +63,23 @@ interface StateData {
 }
 
 const proxy = "https://corsproxy.io/?url=";
+
+// Extract last names from the Finnish names list
+const finnishLastNames = finnishNames.map(name => {
+  const parts = name.split('. '); // Split on ". " to get last name
+  return parts.length > 1 ? parts[1] : name;
+});
+
+// Check if a full name contains a Finnish last name
+const isFinnishPlayer = (fullName: string, teamAbbrev: string): boolean => {
+  // Exclude Sebastian Aho from NYI (different player)
+  if (fullName.includes('Aho') && teamAbbrev === 'NYI') {
+    return false;
+  }
+  
+  // Check if any Finnish last name appears in the full name
+  return finnishLastNames.some(lastName => fullName.includes(lastName));
+};
 
 // Calculate current NHL season ID
 // NHL season runs from October (year) to June (year+1)
@@ -80,6 +100,7 @@ const getCurrentSeasonId = (): number => {
 export default defineComponent({
   components: {
     PlayerPoints,
+    LoadingSpinner,
   },
   data(): StateData {
     return {
@@ -109,6 +130,7 @@ export default defineComponent({
           goals: player.goals,
           assists: player.assists,
           points: player.points,
+          isFinnish: false,
         }));
       } catch (error) {
         console.error("Error fetching Finnish player stats:", error);
@@ -140,23 +162,27 @@ export default defineComponent({
           const goals = playerData.featuredStats.regularSeason.subSeason.goals;
           const assists = playerData.featuredStats.regularSeason.subSeason.assists;
           const points = goals + assists;
+          const fullName = `${player.firstName.default} ${player.lastName.default}`;
           
           return {
-            name: `${player.firstName.default} ${player.lastName.default} (${player.teamAbbrev})`,
+            name: `${fullName} (${player.teamAbbrev})`,
             teamAbbrev: player.teamAbbrev,
             goals: goals,
             assists: assists,
             points: points,
+            isFinnish: isFinnishPlayer(fullName, player.teamAbbrev),
           };
         } catch (error) {
           console.error(`Error fetching data for player ${player.id}:`, error);
           // Fallback to using the value from the points API
+          const fullName = `${player.firstName.default} ${player.lastName.default}`;
           return {
-            name: `${player.firstName.default} ${player.lastName.default} (${player.teamAbbrev})`,
+            name: `${fullName} (${player.teamAbbrev})`,
             teamAbbrev: player.teamAbbrev,
             goals: 0,
             assists: 0,
             points: player.value,
+            isFinnish: isFinnishPlayer(fullName, player.teamAbbrev),
           };
         }
       });
@@ -180,12 +206,12 @@ export default defineComponent({
           type="checkbox" 
           v-model="showFinnishOnly"
           @change="toggleFinnishPlayers"
-        />
+        >
         Finnish players Top 25
       </label>
     </div>
     <div v-if="isLoading" class="spinnerContainer">
-      <img :src="`spinner.gif`" class="spinner" />
+      <LoadingSpinner />
     </div>
     <div v-else-if="displayedPlayers.length > 0" class="playersList">
       <PlayerPoints
@@ -241,12 +267,7 @@ h2 {
 .spinnerContainer {
   display: flex;
   justify-content: center;
-  margin-top: 2rem;
-}
-
-.spinner {
-  height: 128px;
-  width: 128px;
+  padding: 2rem;
 }
 
 .noData {

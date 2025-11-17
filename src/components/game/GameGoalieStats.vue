@@ -18,7 +18,7 @@ export default {
         :key="i"
       />
     </div>
-    <div class="divider" />
+    <div class="divider"></div>
     <div class="goalies">
       <GoalieStats
         v-for="(goalie, i) in away.goalies"

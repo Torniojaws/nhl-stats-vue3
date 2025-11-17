@@ -1,6 +1,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import GameDetails from "./game/GameDetails.vue";
+import LoadingSpinner from "./LoadingSpinner.vue";
 import { getLastNightGamesResults } from "../api";
 import { yesterday } from "../utils/dates";
 import type { IParsedGameData } from "@/types/game";
@@ -14,6 +15,7 @@ interface StateData {
 export default defineComponent({
   components: {
     GameDetails,
+    LoadingSpinner,
   },
   data(): StateData {
     return {
@@ -41,7 +43,7 @@ export default defineComponent({
     />
   </div>
   <div v-if="isLoading" id="spinnerContainer">
-    <img :src="`spinner.gif`" id="spinner" />
+    <LoadingSpinner />
   </div>
   <div v-if="!isLoading && games.length === 0" id="noGames">
     <p>No games last night ({{ yesterday }})</p>
@@ -62,9 +64,6 @@ div#noGames {
 div#spinnerContainer {
   display: flex;
   justify-content: center;
-}
-img#spinner {
-  height: 128px;
-  width: 128px;
+  padding: 2rem;
 }
 </style>

@@ -1,14 +1,11 @@
 <script lang="ts">
 import { defineComponent } from "vue";
-import { finnishNames } from "../../utils/players";
 export default defineComponent({
   props: ["player", "index"],
   data() {
     return {
       isEven: this.index % 2 === 0,
-      isFinnish:
-        finnishNames.includes(this.player.name) &&
-        this.player.teamAbbrev !== "NYI", // To not mark the other Sebastian Aho as Finnish
+      isFinnish: this.player.isFinnish || false,
     };
   },
 });
