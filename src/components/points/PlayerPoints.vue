@@ -2,11 +2,13 @@
 import { defineComponent } from "vue";
 export default defineComponent({
   props: ["player", "index"],
-  data() {
-    return {
-      isEven: this.index % 2 === 0,
-      isFinnish: this.player.isFinnish || false,
-    };
+  computed: {
+    isEven(): boolean {
+      return this.index % 2 === 0;
+    },
+    isFinnish(): boolean {
+      return this.player.isFinnish || false;
+    },
   },
 });
 </script>

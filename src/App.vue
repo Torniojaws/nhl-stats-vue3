@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
+import packageJson from '../package.json'
+
+const version = packageJson.version
 </script>
 
 <template>
   <header>
-    <h1>NHL Statistics v2.2</h1>
+    <h1>NHL Statistics v{{ version }}</h1>
     <nav>
       <RouterLink to="/">Games</RouterLink>
       <RouterLink to="/points">Points Leaders</RouterLink>
