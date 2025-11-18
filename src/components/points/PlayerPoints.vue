@@ -1,5 +1,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
+import { finnishNames } from "../../utils/players";
+
 export default defineComponent({
   props: ["player", "index"],
   computed: {
@@ -7,7 +9,15 @@ export default defineComponent({
       return this.index % 2 === 0;
     },
     isFinnish(): boolean {
-      return this.player.isFinnish || false;
+      // If player has isFinnish property (from Points view), use it
+      if (this.player.isFinnish !== undefined) {
+        return this.player.isFinnish;
+      }
+      // Otherwise, check using the old logic (for Games view)
+      return (
+        finnishNames.includes(this.player.name) &&
+        this.player.teamAbbrev !== "NYI"
+      );
     },
   },
 });
