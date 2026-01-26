@@ -4,36 +4,6 @@ import PlayerPoints from "../components/points/PlayerPoints.vue";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
 import { finnishNames } from "../utils/players";
 
-interface SkaterLeader {
-  id: number;
-  headshot: string;
-  firstName: {
-    default: string;
-  };
-  lastName: {
-    default: string;
-  };
-  sweaterNumber: number;
-  positionCode: string;
-  teamAbbrev: string;
-  value: number;
-}
-
-interface PlayerLandingData {
-  featuredStats: {
-    regularSeason: {
-      subSeason: {
-        goals: number;
-        assists: number;
-      };
-    };
-  };
-}
-
-interface ApiResponse {
-  points: SkaterLeader[];
-}
-
 interface FinnishPlayerData {
   skaterFullName: string;
   teamAbbrevs: string;
@@ -119,8 +89,9 @@ export default defineComponent({
     async fetchFinnishPlayers() {
       try {
         const seasonId = getCurrentSeasonId();
+        const apiUrl = `https://api.nhle.com/stats/rest/en/skater/summary?isAggregate=false&isGame=false&sort=%5B%7B%22property%22:%22points%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22goals%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22assists%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22playerId%22,%22direction%22:%22ASC%22%7D%5D&start=0&limit=25&cayenneExp=gameTypeId=2%20and%20nationalityCode=%22FIN%22%20and%20seasonId%3C=${seasonId}%20and%20seasonId%3E=${seasonId}`;
         const response = await fetch(
-          `${proxy}https://api.nhle.com/stats/rest/en/skater/summary?isAggregate=false&isGame=false&sort=[{"property":"points","direction":"DESC"},{"property":"goals","direction":"DESC"},{"property":"assists","direction":"DESC"},{"property":"playerId","direction":"ASC"}]&start=0&limit=25&cayenneExp=gameTypeId=2 and nationalityCode="FIN" and seasonId<=${seasonId} and seasonId>=${seasonId}`
+          `${proxy}${encodeURIComponent(apiUrl)}`
         );
         const data: FinnishApiResponse = await response.json();
         
@@ -146,48 +117,21 @@ export default defineComponent({
   },
   async mounted() {
     try {
+      const seasonId = getCurrentSeasonId();
+      const apiUrl = `https://api.nhle.com/stats/rest/en/skater/summary?isAggregate=false&isGame=false&sort=%5B%7B%22property%22:%22points%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22goals%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22assists%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22playerId%22,%22direction%22:%22ASC%22%7D%5D&start=0&limit=25&cayenneExp=gameTypeId=2%20and%20seasonId%3C=${seasonId}%20and%20seasonId%3E=${seasonId}`;
       const response = await fetch(
-        `${proxy}https://api-web.nhle.com/v1/skater-stats-leaders/current?categories=points&limit=25`
+        `${proxy}${encodeURIComponent(apiUrl)}`
       );
-      const data: ApiResponse = await response.json();
+      const data: FinnishApiResponse = await response.json();
       
-      // Fetch individual player data for each points leader
-      const playerPromises = data.points.map(async (player: SkaterLeader) => {
-        try {
-          const playerResponse = await fetch(
-            `${proxy}https://api-web.nhle.com/v1/player/${player.id}/landing`
-          );
-          const playerData: PlayerLandingData = await playerResponse.json();
-          
-          const goals = playerData.featuredStats.regularSeason.subSeason.goals;
-          const assists = playerData.featuredStats.regularSeason.subSeason.assists;
-          const points = goals + assists;
-          const fullName = `${player.firstName.default} ${player.lastName.default}`;
-          
-          return {
-            name: `${fullName} (${player.teamAbbrev})`,
-            teamAbbrev: player.teamAbbrev,
-            goals: goals,
-            assists: assists,
-            points: points,
-            isFinnish: isFinnishPlayer(fullName, player.teamAbbrev),
-          };
-        } catch (error) {
-          console.error(`Error fetching data for player ${player.id}:`, error);
-          // Fallback to using the value from the points API
-          const fullName = `${player.firstName.default} ${player.lastName.default}`;
-          return {
-            name: `${fullName} (${player.teamAbbrev})`,
-            teamAbbrev: player.teamAbbrev,
-            goals: 0,
-            assists: 0,
-            points: player.value,
-            isFinnish: isFinnishPlayer(fullName, player.teamAbbrev),
-          };
-        }
-      });
-      
-      this.players = await Promise.all(playerPromises);
+      this.players = data.data.map((player: FinnishPlayerData) => ({
+        name: `${player.skaterFullName} (${player.teamAbbrevs})`,
+        teamAbbrev: player.teamAbbrevs,
+        goals: player.goals,
+        assists: player.assists,
+        points: player.points,
+        isFinnish: isFinnishPlayer(player.skaterFullName, player.teamAbbrevs),
+      }));
     } catch (error) {
       console.error("Error fetching player stats:", error);
     } finally {
