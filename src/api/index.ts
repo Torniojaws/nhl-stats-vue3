@@ -3,18 +3,25 @@ import type { IPlayerByGameStats } from "../types/team";
 import { getGoalieStats, getPoints } from "../utils/players";
 import { today, yesterday } from "../utils/dates";
 
-const proxy = "https://corsproxy.io/?url=";
+export const proxy = "https://cors.io/?url=";
 
 const getGamesOnDate = async (date: string) =>
   fetch(`${proxy}https://api-web.nhle.com/v1/schedule/${date}`)
     .then((response) => response.json())
-    .then((data) => data.gameWeek[0].games)
+    .then((envelope) => {
+      const data = JSON.parse(envelope.body);
+      return data.gameWeek[0].games;
+    })
     .catch((err) => err);
 
 const getGameResult = async (gameId: number): Promise<IPlayerByGameStats> =>
   fetch(`${proxy}https://api-web.nhle.com/v1/gamecenter/${gameId}/boxscore`)
     .then((response) => response.json())
-    .then((data) => data)
+    .then((envelope) => {
+      const data = JSON.parse(envelope.body);
+      console.log(data);
+      return data;
+    })
     .catch((err) => err);
 
 const getAllGames = async (

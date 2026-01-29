@@ -3,6 +3,7 @@ import { defineComponent } from "vue";
 import PlayerPoints from "../components/points/PlayerPoints.vue";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
 import { finnishNames } from "../utils/players";
+import { proxy } from "@/api";
 
 interface FinnishPlayerData {
   skaterFullName: string;
@@ -31,8 +32,6 @@ interface StateData {
   isLoading: boolean;
   showFinnishOnly: boolean;
 }
-
-const proxy = "https://corsproxy.io/?url=";
 
 // Extract last names from the Finnish names list
 const finnishLastNames = finnishNames.map(name => {
@@ -93,7 +92,9 @@ export default defineComponent({
         const response = await fetch(
           `${proxy}${encodeURIComponent(apiUrl)}`
         );
-        const data: FinnishApiResponse = await response.json();
+        const envelope = await response.json();
+        const data: FinnishApiResponse = JSON.parse(envelope.body);
+        console.log("Fetched Finnish players data:", data);
         
         this.finnishPlayers = data.data.map((player: FinnishPlayerData) => ({
           name: `${player.skaterFullName} (${player.teamAbbrevs})`,
@@ -122,7 +123,9 @@ export default defineComponent({
       const response = await fetch(
         `${proxy}${encodeURIComponent(apiUrl)}`
       );
-      const data: FinnishApiResponse = await response.json();
+      const envelope = await response.json();
+      const data: FinnishApiResponse = JSON.parse(envelope.body);
+      console.log('Fetched all players data:', data);
       
       this.players = data.data.map((player: FinnishPlayerData) => ({
         name: `${player.skaterFullName} (${player.teamAbbrevs})`,
