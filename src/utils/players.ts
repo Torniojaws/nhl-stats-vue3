@@ -60,6 +60,12 @@ export const getPoints = async (
   ); // First by points, and if equal, by goals;
 };
 
+export const normalizePlayerName = (value: string): string =>
+  value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
 // The new API doesn't provide player nationalities, so this is a simple alternative
 export const finnishNames = [
   "S. Aho",
@@ -141,7 +147,7 @@ export const finnishNames = [
   "V. Puustinen",
   "A. Raanta",
   "M. Rantanen",
-  "A. Raty",
+  "A. Räty",
   "R. Ristolainen",
   "O. Salin",
   "J. Saros",
@@ -158,3 +164,27 @@ export const finnishNames = [
   "E. Viro",
   "J. Ylönen",
 ];
+
+const normalizedFinnishNames = new Set(finnishNames.map(normalizePlayerName));
+const normalizedFinnishLastNames = finnishNames
+  .map((name) => {
+    const parts = name.split(". ");
+    return parts.length > 1 ? parts[1] : name;
+  })
+  .map(normalizePlayerName);
+
+export const isFinnishName = (name: string): boolean =>
+  normalizedFinnishNames.has(normalizePlayerName(name));
+
+export const isFinnishPlayer = (fullName: string, teamAbbrev: string): boolean => {
+  const normalizedFullName = normalizePlayerName(fullName);
+
+  // Exclude Sebastian Aho from NYI (different player)
+  if (normalizedFullName.includes("aho") && teamAbbrev === "NYI") {
+    return false;
+  }
+
+  return normalizedFinnishLastNames.some((lastName) =>
+    normalizedFullName.includes(lastName)
+  );
+};

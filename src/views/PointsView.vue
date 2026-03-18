@@ -2,7 +2,7 @@
 import { defineComponent } from "vue";
 import PlayerPoints from "../components/points/PlayerPoints.vue";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
-import { finnishNames } from "../utils/players";
+import { isFinnishPlayer } from "../utils/players";
 import { proxy } from "@/api";
 
 interface FinnishPlayerData {
@@ -32,23 +32,6 @@ interface StateData {
   isLoading: boolean;
   showFinnishOnly: boolean;
 }
-
-// Extract last names from the Finnish names list
-const finnishLastNames = finnishNames.map(name => {
-  const parts = name.split('. '); // Split on ". " to get last name
-  return parts.length > 1 ? parts[1] : name;
-});
-
-// Check if a full name contains a Finnish last name
-const isFinnishPlayer = (fullName: string, teamAbbrev: string): boolean => {
-  // Exclude Sebastian Aho from NYI (different player)
-  if (fullName.includes('Aho') && teamAbbrev === 'NYI') {
-    return false;
-  }
-  
-  // Check if any Finnish last name appears in the full name
-  return finnishLastNames.some(lastName => fullName.includes(lastName));
-};
 
 // Calculate current NHL season ID
 // NHL season runs from October (year) to June (year+1)

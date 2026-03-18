@@ -1,6 +1,6 @@
 <script lang="ts">
 import { defineComponent } from "vue";
-import { finnishNames } from "../../utils/players";
+import { isFinnishName } from "../../utils/players";
 
 export default defineComponent({
   props: ["player", "index"],
@@ -13,11 +13,11 @@ export default defineComponent({
       if (this.player.isFinnish !== undefined) {
         return this.player.isFinnish;
       }
-      // Otherwise, check using the old logic (for Games view)
-      return (
-        finnishNames.includes(this.player.name) &&
-        this.player.teamAbbrev !== "NYI"
-      );
+      // Ignore Sebastian Aho from NYI
+      if (this.player.name === "S. Aho" && this.player.teamAbbrev === "NYI") {
+        return false;
+      }
+      return isFinnishName(this.player.name);
     },
   },
 });
