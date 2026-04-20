@@ -5,6 +5,7 @@ import LoadingSpinner from "../components/LoadingSpinner.vue";
 import { isFinnishPlayer } from "../utils/players";
 import { proxy } from "@/api";
 
+
 interface FinnishPlayerData {
   skaterFullName: string;
   teamAbbrevs: string;
@@ -15,6 +16,20 @@ interface FinnishPlayerData {
 
 interface FinnishApiResponse {
   data: FinnishPlayerData[];
+}
+
+interface SeasonData {
+  id: number;
+  regularSeasonEndDate: string;
+  startDate: string;
+}
+
+interface SeasonApiResponse {
+  data: SeasonData[];
+}
+
+interface ProxyEnvelope {
+  body: string;
 }
 
 interface PlayerData {
@@ -29,9 +44,15 @@ interface PlayerData {
 interface StateData {
   players: PlayerData[];
   finnishPlayers: PlayerData[];
+  playoffPlayers: PlayerData[];
+  finnishPlayoffPlayers: PlayerData[];
   isLoading: boolean;
   showFinnishOnly: boolean;
+  showPlayoffLeaders: boolean;
+  currentSeasonId: number;
 }
+
+const ONE_MONTH_IN_MS = 30 * 24 * 60 * 60 * 1000;
 
 // Calculate current NHL season ID
 // NHL season runs from October (year) to June (year+1)
@@ -49,6 +70,35 @@ const getCurrentSeasonId = (): number => {
   return parseInt(`${seasonStartYear}${seasonEndYear}`);
 };
 
+const mapPlayer = (player: FinnishPlayerData | Record<string, unknown>): PlayerData => {
+  const payload = player as Partial<FinnishPlayerData> & {
+    playerName?: string;
+    teamAbbrev?: string;
+  };
+  const name = String(payload.skaterFullName ?? payload.playerName ?? "Unknown");
+  const teamAbbrev = String(payload.teamAbbrevs ?? payload.teamAbbrev ?? "");
+
+  return {
+    name: `${name}${teamAbbrev ? ` (${teamAbbrev})` : ""}`,
+    teamAbbrev,
+    goals: Number(player.goals ?? 0),
+    assists: Number(player.assists ?? 0),
+    points: Number(player.points ?? 0),
+    isFinnish: isFinnishPlayer(name, teamAbbrev),
+  };
+};
+
+const shouldShowPlayoffLeaders = (season: SeasonData): boolean => {
+  const now = new Date();
+  const regularSeasonEndDate = new Date(season.regularSeasonEndDate);
+  const seasonStartDate = new Date(season.startDate);
+  const isOneMonthBeforeSeasonStart =
+    seasonStartDate > now &&
+    seasonStartDate.getTime() - now.getTime() <= ONE_MONTH_IN_MS;
+
+  return now >= regularSeasonEndDate && !isOneMonthBeforeSeasonStart;
+};
+
 export default defineComponent({
   components: {
     PlayerPoints,
@@ -58,58 +108,56 @@ export default defineComponent({
     return {
       players: [],
       finnishPlayers: [],
+      playoffPlayers: [],
+      finnishPlayoffPlayers: [],
       isLoading: true,
       showFinnishOnly: false,
+      showPlayoffLeaders: false,
+      currentSeasonId: getCurrentSeasonId(),
     };
   },
   computed: {
     displayedPlayers(): PlayerData[] {
-      return this.showFinnishOnly ? this.finnishPlayers : this.players;
+      const list = this.showFinnishOnly ? this.finnishPlayers : this.players;
+      return this.showFinnishOnly
+        ? list.map((p) => ({ ...p, isFinnish: false }))
+        : list;
+    },
+    displayedPlayoffPlayers(): PlayerData[] {
+      const list = this.showFinnishOnly
+        ? this.finnishPlayoffPlayers
+        : this.playoffPlayers;
+      return this.showFinnishOnly
+        ? list.map((p) => ({ ...p, isFinnish: false }))
+        : list;
+    },
+    playoffLeadersTitle(): string {
+      const count = this.displayedPlayoffPlayers.length;
+      if (count === 0) return "Playoffs Points Leaders";
+      if (count < 25) return `Playoffs Points Leaders (${count} players)`;
+      return "Playoffs Top 25 Points Leaders";
     },
   },
   methods: {
-    async fetchFinnishPlayers() {
-      try {
-        const seasonId = getCurrentSeasonId();
-        const apiUrl = `https://api.nhle.com/stats/rest/en/skater/summary?isAggregate=false&isGame=false&sort=%5B%7B%22property%22:%22points%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22goals%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22assists%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22playerId%22,%22direction%22:%22ASC%22%7D%5D&start=0&limit=25&cayenneExp=gameTypeId=2%20and%20nationalityCode=%22FIN%22%20and%20seasonId%3C=${seasonId}%20and%20seasonId%3E=${seasonId}`;
-        const response = await fetch(
-          `${proxy}${encodeURIComponent(apiUrl)}`
-        );
-        const envelope = await response.json();
-        const data: FinnishApiResponse = JSON.parse(envelope.body);
-        console.log("Fetched Finnish players data:", data);
-        
-        this.finnishPlayers = data.data.map((player: FinnishPlayerData) => ({
-          name: `${player.skaterFullName} (${player.teamAbbrevs})`,
-          teamAbbrev: player.teamAbbrevs,
-          goals: player.goals,
-          assists: player.assists,
-          points: player.points,
-          isFinnish: false,
-        }));
-      } catch (error) {
-        console.error("Error fetching Finnish player stats:", error);
+    async fetchCurrentSeasonData() {
+      const seasonApiUrl =
+        "https://api.nhle.com/stats/rest/en/season?sort=%5B%7B%22property%22:%22id%22,%22direction%22:%22DESC%22%7D%5D";
+      const response = await fetch(`${proxy}${encodeURIComponent(seasonApiUrl)}`);
+      const envelope: ProxyEnvelope = await response.json();
+      const data: SeasonApiResponse = JSON.parse(envelope.body);
+      const currentSeason = data.data[0];
+
+      if (currentSeason) {
+        this.currentSeasonId = currentSeason.id;
+        this.showPlayoffLeaders = shouldShowPlayoffLeaders(currentSeason);
       }
     },
-    async toggleFinnishPlayers() {
-      if (this.showFinnishOnly && this.finnishPlayers.length === 0) {
-        this.isLoading = true;
-        await this.fetchFinnishPlayers();
-        this.isLoading = false;
-      }
-    },
-  },
-  async mounted() {
-    try {
-      const seasonId = getCurrentSeasonId();
-      const apiUrl = `https://api.nhle.com/stats/rest/en/skater/summary?isAggregate=false&isGame=false&sort=%5B%7B%22property%22:%22points%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22goals%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22assists%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22playerId%22,%22direction%22:%22ASC%22%7D%5D&start=0&limit=25&cayenneExp=gameTypeId=2%20and%20seasonId%3C=${seasonId}%20and%20seasonId%3E=${seasonId}`;
-      const response = await fetch(
-        `${proxy}${encodeURIComponent(apiUrl)}`
-      );
-      const envelope = await response.json();
+    async fetchPlayers() {
+      const apiUrl = `https://api.nhle.com/stats/rest/en/skater/summary?isAggregate=false&isGame=false&sort=%5B%7B%22property%22:%22points%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22goals%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22assists%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22playerId%22,%22direction%22:%22ASC%22%7D%5D&start=0&limit=25&cayenneExp=gameTypeId=2%20and%20seasonId%3C=${this.currentSeasonId}%20and%20seasonId%3E=${this.currentSeasonId}`;
+      const response = await fetch(`${proxy}${encodeURIComponent(apiUrl)}`);
+      const envelope: ProxyEnvelope = await response.json();
       const data: FinnishApiResponse = JSON.parse(envelope.body);
-      console.log('Fetched all players data:', data);
-      
+
       this.players = data.data.map((player: FinnishPlayerData) => ({
         name: `${player.skaterFullName} (${player.teamAbbrevs})`,
         teamAbbrev: player.teamAbbrevs,
@@ -118,6 +166,85 @@ export default defineComponent({
         points: player.points,
         isFinnish: isFinnishPlayer(player.skaterFullName, player.teamAbbrevs),
       }));
+    },
+    async fetchPlayoffPlayers() {
+      const apiUrl = `https://api.nhle.com/stats/rest/en/skater/summary?isAggregate=false&isGame=false&sort=%5B%7B%22property%22:%22points%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22gamesPlayed%22,%22direction%22:%22ASC%22%7D,%7B%22property%22:%22playerId%22,%22direction%22:%22ASC%22%7D%5D&start=0&limit=25&cayenneExp=gameTypeId=3%20and%20seasonId%3C=${this.currentSeasonId}%20and%20seasonId%3E=${this.currentSeasonId}`;
+      const response = await fetch(`${proxy}${encodeURIComponent(apiUrl)}`);
+      const envelope: ProxyEnvelope = await response.json();
+      const data: FinnishApiResponse = JSON.parse(envelope.body);
+
+      this.playoffPlayers = data.data.map((player: FinnishPlayerData) =>
+        mapPlayer(player)
+      );
+    },
+    async fetchFinnishPlayers() {
+      try {
+        const apiUrl = `https://api.nhle.com/stats/rest/en/skater/summary?isAggregate=false&isGame=false&sort=%5B%7B%22property%22:%22points%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22goals%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22assists%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22playerId%22,%22direction%22:%22ASC%22%7D%5D&start=0&limit=25&cayenneExp=gameTypeId=2%20and%20nationalityCode=%22FIN%22%20and%20seasonId%3C=${this.currentSeasonId}%20and%20seasonId%3E=${this.currentSeasonId}`;
+        const response = await fetch(
+          `${proxy}${encodeURIComponent(apiUrl)}`
+        );
+        const envelope: ProxyEnvelope = await response.json();
+        const data: FinnishApiResponse = JSON.parse(envelope.body);
+        
+        this.finnishPlayers = data.data.map((player: FinnishPlayerData) =>
+          mapPlayer(player)
+        );
+      } catch (error) {
+        console.error("Error fetching Finnish player stats:", error);
+      }
+    },
+    async fetchFinnishPlayoffPlayers() {
+      try {
+        const apiUrl = `https://api.nhle.com/stats/rest/en/skater/summary?isAggregate=false&isGame=false&sort=%5B%7B%22property%22:%22points%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22gamesPlayed%22,%22direction%22:%22ASC%22%7D,%7B%22property%22:%22playerId%22,%22direction%22:%22ASC%22%7D%5D&start=0&limit=25&cayenneExp=gameTypeId=3%20and%20nationalityCode=%22FIN%22%20and%20seasonId%3C=${this.currentSeasonId}%20and%20seasonId%3E=${this.currentSeasonId}`;
+        const response = await fetch(
+          `${proxy}${encodeURIComponent(apiUrl)}`
+        );
+        const envelope: ProxyEnvelope = await response.json();
+        const data: FinnishApiResponse = JSON.parse(envelope.body);
+
+        this.finnishPlayoffPlayers = data.data.map(
+          (player: FinnishPlayerData) => mapPlayer(player)
+        );
+      } catch (error) {
+        console.error("Error fetching Finnish playoff player stats:", error);
+      }
+    },
+    async toggleFinnishPlayers() {
+      if (!this.showFinnishOnly) {
+        return;
+      }
+
+      const shouldFetchFinnishRegular = this.finnishPlayers.length === 0;
+      const shouldFetchFinnishPlayoffs =
+        this.showPlayoffLeaders && this.finnishPlayoffPlayers.length === 0;
+
+      if (shouldFetchFinnishRegular || shouldFetchFinnishPlayoffs) {
+        this.isLoading = true;
+        try {
+          const requests: Promise<void>[] = [];
+
+          if (shouldFetchFinnishRegular) {
+            requests.push(this.fetchFinnishPlayers());
+          }
+          if (shouldFetchFinnishPlayoffs) {
+            requests.push(this.fetchFinnishPlayoffPlayers());
+          }
+
+          await Promise.all(requests);
+        } finally {
+          this.isLoading = false;
+        }
+      }
+    },
+  },
+  async mounted() {
+    try {
+      await this.fetchCurrentSeasonData();
+      await this.fetchPlayers();
+
+      if (this.showPlayoffLeaders) {
+        await this.fetchPlayoffPlayers();
+      }
     } catch (error) {
       console.error("Error fetching player stats:", error);
     } finally {
@@ -137,22 +264,40 @@ export default defineComponent({
           v-model="showFinnishOnly"
           @change="toggleFinnishPlayers"
         >
-        Finnish players Top 25
+        Show only Finnish players
       </label>
     </div>
     <div v-if="isLoading" class="spinnerContainer">
       <LoadingSpinner />
     </div>
-    <div v-else-if="displayedPlayers.length > 0" class="playersList">
-      <PlayerPoints
-        v-for="(player, i) in displayedPlayers"
-        :key="i"
-        :player="player"
-        :index="i"
-      />
-    </div>
-    <div v-else class="noData">
-      <p>No player data available</p>
+
+    <div v-else class="listsContainer">
+      <div v-if="displayedPlayers.length > 0" class="playersList">
+        <PlayerPoints
+          v-for="(player, i) in displayedPlayers"
+          :key="`regular-${i}`"
+          :player="player"
+          :index="i"
+        />
+      </div>
+      <div v-else class="noData">
+        <p>No player data available</p>
+      </div>
+
+      <section v-if="showPlayoffLeaders" class="playoffsSection">
+        <h3>{{ playoffLeadersTitle }}</h3>
+        <div v-if="displayedPlayoffPlayers.length > 0" class="playersList">
+          <PlayerPoints
+            v-for="(player, i) in displayedPlayoffPlayers"
+            :key="`playoff-${i}`"
+            :player="player"
+            :index="i"
+          />
+        </div>
+        <div v-else class="noData">
+          <p>No playoff player data available</p>
+        </div>
+      </section>
     </div>
   </div>
 </template>
@@ -192,6 +337,24 @@ h2 {
 .playersList {
   width: 100%;
   max-width: 800px;
+}
+
+.listsContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.playoffsSection {
+  width: 100%;
+  max-width: 800px;
+  margin-top: 2rem;
+}
+
+.playoffsSection h3 {
+  text-align: center;
+  margin-bottom: 1rem;
 }
 
 .spinnerContainer {
