@@ -11,6 +11,7 @@ const version = packageJson.version
     <nav>
       <RouterLink to="/">Games</RouterLink>
       <RouterLink to="/points">Points Leaders</RouterLink>
+      <RouterLink to="/goalies">Goalie Leaders</RouterLink>
     </nav>
   </header>
   <main>
