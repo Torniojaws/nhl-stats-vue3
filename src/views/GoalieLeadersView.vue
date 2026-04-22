@@ -129,7 +129,7 @@ export default defineComponent({
     buildGoalieUrl(
       sortMetric: SortMetric,
       gameTypeId: number,
-      withGamesPlayedLimit: boolean
+      factFilter?: string
     ): string {
       const sortDirection = sortMetric === "goalsAgainstAverage" ? "ASC" : "DESC";
       const sort = encodeURIComponent(
@@ -141,8 +141,8 @@ export default defineComponent({
       const cayenneExp = encodeURIComponent(
         `gameTypeId=${gameTypeId} and seasonId<=${this.currentSeasonId} and seasonId>=${this.currentSeasonId}`
       );
-      const factCayenneExp = withGamesPlayedLimit
-        ? `&factCayenneExp=${encodeURIComponent("gamesPlayed>=10")}`
+      const factCayenneExp = factFilter
+        ? `&factCayenneExp=${encodeURIComponent(factFilter)}`
         : "";
 
       return `https://api.nhle.com/stats/rest/en/goalie/summary?isAggregate=false&isGame=false&sort=${sort}&start=0&limit=50${factCayenneExp}&cayenneExp=${cayenneExp}`;
@@ -150,9 +150,9 @@ export default defineComponent({
     async fetchGoalieLeaders(
       sortMetric: SortMetric,
       gameTypeId: number,
-      withGamesPlayedLimit: boolean
+      factFilter?: string
     ): Promise<GoalieLeader[]> {
-      const apiUrl = this.buildGoalieUrl(sortMetric, gameTypeId, withGamesPlayedLimit);
+      const apiUrl = this.buildGoalieUrl(sortMetric, gameTypeId, factFilter);
       const response = await fetch(`${proxy}${encodeURIComponent(apiUrl)}`);
       const envelope: ProxyEnvelope = await response.json();
       const data: GoalieApiResponse = JSON.parse(envelope.body);
@@ -160,16 +160,16 @@ export default defineComponent({
       return data.data.map(mapGoalie);
     },
     async fetchRegularGoalieLeaders(sortMetric: SortMetric): Promise<GoalieLeader[]> {
-      const withLimit = await this.fetchGoalieLeaders(sortMetric, 2, true);
+      const withLimit = await this.fetchGoalieLeaders(sortMetric, 2, "gamesPlayed>=10");
       if (withLimit.length > 0) {
         return withLimit.slice(0, TOP_LIMIT);
       }
 
-      const withoutLimit = await this.fetchGoalieLeaders(sortMetric, 2, false);
+      const withoutLimit = await this.fetchGoalieLeaders(sortMetric, 2);
       return withoutLimit.slice(0, TOP_LIMIT);
     },
     async fetchPlayoffGoalieLeaders(sortMetric: SortMetric): Promise<GoalieLeader[]> {
-      const playoffLeaders = await this.fetchGoalieLeaders(sortMetric, 3, false);
+      const playoffLeaders = await this.fetchGoalieLeaders(sortMetric, 3, "timeOnIce>=3000");
       return playoffLeaders.slice(0, TOP_LIMIT);
     },
     async fetchAllRegularGoalieLeaders() {
@@ -215,7 +215,6 @@ export default defineComponent({
 <template>
   <div class="goalieLeadersView">
     <h2>Goalie Leaders (Top 15)</h2>
-
     <div v-if="isLoading" class="spinnerContainer">
       <LoadingSpinner />
     </div>
@@ -272,6 +271,10 @@ export default defineComponent({
 
       <section v-if="showPlayoffLeaders" class="seasonSection playoffsSection">
         <h3>Playoffs</h3>
+        <p v-if="showPlayoffLeaders" class="seasonNote">
+          Min 50 minutes played
+        </p>
+
 
         <div class="metricSection">
           <h4>Wins</h4>
