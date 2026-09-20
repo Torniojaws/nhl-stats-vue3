@@ -138,6 +138,20 @@ export default defineComponent({
       return "Playoffs Top 25 Points Leaders";
     },
   },
+  async mounted() {
+    try {
+      await this.fetchCurrentSeasonData();
+      await this.fetchPlayers();
+
+      if (this.showPlayoffLeaders) {
+        await this.fetchPlayoffPlayers();
+      }
+    } catch (error) {
+      console.error("Error fetching player stats:", error);
+    } finally {
+      this.isLoading = false;
+    }
+  },
   methods: {
     async fetchCurrentSeasonData() {
       const seasonApiUrl =
@@ -237,20 +251,6 @@ export default defineComponent({
       }
     },
   },
-  async mounted() {
-    try {
-      await this.fetchCurrentSeasonData();
-      await this.fetchPlayers();
-
-      if (this.showPlayoffLeaders) {
-        await this.fetchPlayoffPlayers();
-      }
-    } catch (error) {
-      console.error("Error fetching player stats:", error);
-    } finally {
-      this.isLoading = false;
-    }
-  },
 });
 </script>
 
@@ -260,8 +260,8 @@ export default defineComponent({
     <div class="filterContainer">
       <label class="checkbox">
         <input 
-          type="checkbox" 
-          v-model="showFinnishOnly"
+          v-model="showFinnishOnly" 
+          type="checkbox"
           @change="toggleFinnishPlayers"
         >
         Show only Finnish players

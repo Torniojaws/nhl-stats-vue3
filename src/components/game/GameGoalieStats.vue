@@ -13,18 +13,18 @@ export default {
     <div class="goalies">
       <GoalieStats
         v-for="(goalie, i) in home.goalies"
+        :key="i"
         :goalie="goalie"
         :index="i"
-        :key="i"
       />
     </div>
     <div class="divider"></div>
     <div class="goalies">
       <GoalieStats
         v-for="(goalie, i) in away.goalies"
+        :key="i"
         :goalie="goalie"
         :index="i"
-        :key="i"
       />
     </div>
   </div>

@@ -112,6 +112,20 @@ export default defineComponent({
       playoffSavePct: [],
     };
   },
+  async mounted() {
+    try {
+      await this.fetchCurrentSeasonData();
+      await this.fetchAllRegularGoalieLeaders();
+
+      if (this.showPlayoffLeaders) {
+        await this.fetchAllPlayoffGoalieLeaders();
+      }
+    } catch (error) {
+      console.error("Error fetching goalie leaders:", error);
+    } finally {
+      this.isLoading = false;
+    }
+  },
   methods: {
     async fetchCurrentSeasonData() {
       const seasonApiUrl =
@@ -194,20 +208,6 @@ export default defineComponent({
       this.playoffGaa = gaa;
       this.playoffSavePct = savePct;
     },
-  },
-  async mounted() {
-    try {
-      await this.fetchCurrentSeasonData();
-      await this.fetchAllRegularGoalieLeaders();
-
-      if (this.showPlayoffLeaders) {
-        await this.fetchAllPlayoffGoalieLeaders();
-      }
-    } catch (error) {
-      console.error("Error fetching goalie leaders:", error);
-    } finally {
-      this.isLoading = false;
-    }
   },
 });
 </script>

@@ -6,18 +6,18 @@ import type { IGameData } from "@/types/game";
 
 export default defineComponent({
   props: ["away", "game", "home"],
-  methods: {
-    getTeamBackground: (teamName: string) => getTeamColorCss(teamName),
-    getTeamName: (teamAbbrev: string) => getTeamByAbbrev(teamAbbrev),
-    getSeriesResult: (teamAbbrev: string, game: IGameData) =>
-      getSeriesWins(teamAbbrev, game),
-  },
   data() {
     return {
       isGameInProgress: this.game.gameState === "LIVE",
       isGameCancelled: this.game.gameScheduleState === "CNCL",
       isPlayoffsGame: this.game.gameType === 3, // 1-preseason, 2-regseason, 3-playoffs
     };
+  },
+  methods: {
+    getTeamBackground: (teamName: string) => getTeamColorCss(teamName),
+    getTeamName: (teamAbbrev: string) => getTeamByAbbrev(teamAbbrev),
+    getSeriesResult: (teamAbbrev: string, game: IGameData) =>
+      getSeriesWins(teamAbbrev, game),
   },
 });
 </script>
@@ -52,7 +52,7 @@ export default defineComponent({
     <div>Playoffs series:</div>
     <div class="playoffsSeries">
       <div
-        v-bind:class="[
+        :class="[
           getSeriesResult(game.homeTeam.abbrev, game) === 4 && 'wonSeries',
         ]"
       >
@@ -61,7 +61,7 @@ export default defineComponent({
       </div>
       -
       <div
-        v-bind:class="[
+        :class="[
           getSeriesResult(game.awayTeam.abbrev, game) === 4 && 'wonSeries',
         ]"
       >

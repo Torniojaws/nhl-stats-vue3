@@ -13,18 +13,18 @@ export default {
     <div class="scorers">
       <PlayerPoints
         v-for="(player, i) in home.points"
+        :key="i"
         :player="player"
         :index="i"
-        :key="i"
       />
     </div>
     <div class="divider"></div>
     <div class="scorers">
       <PlayerPoints
         v-for="(player, i) in away.points"
+        :key="i"
         :player="player"
         :index="i"
-        :key="i"
       />
     </div>
   </div>
