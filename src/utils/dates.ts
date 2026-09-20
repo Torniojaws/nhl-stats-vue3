@@ -10,6 +10,10 @@ const getDateInTimezone = (date: Date, timezone: string = NHL_TIMEZONE): string 
   }); // Returns YYYY-MM-DD format
 };
 
-export const yesterday = getDateInTimezone(new Date(Date.now() - 864e5));
+export const getYesterday = (): string =>
+  getDateInTimezone(new Date(Date.now() - 864e5));
 
-export const today = getDateInTimezone(new Date(Date.now()));
+export const getToday = (): string => getDateInTimezone(new Date(Date.now()));
+
+export const yesterday = getYesterday();
+export const today = getToday();

@@ -2,7 +2,7 @@
 import { defineComponent } from "vue";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
 import GoalieLeaderRow from "../components/goalies/GoalieLeaderRow.vue";
-import { proxy } from "@/api";
+import { fetchProxyJson } from "@/api";
 
 interface SeasonData {
   id: number;
@@ -12,10 +12,6 @@ interface SeasonData {
 
 interface SeasonApiResponse {
   data: SeasonData[];
-}
-
-interface ProxyEnvelope {
-  body: string;
 }
 
 interface GoalieApiData {
@@ -52,12 +48,15 @@ interface StateData {
   playoffWins: GoalieLeader[];
   playoffGaa: GoalieLeader[];
   playoffSavePct: GoalieLeader[];
+  abortController: AbortController;
 }
 
 type SortMetric = "wins" | "goalsAgainstAverage" | "savePct";
 
 const TOP_LIMIT = 15;
 const ONE_MONTH_IN_MS = 30 * 24 * 60 * 60 * 1000;
+const SEASON_CACHE_TTL = 60 * 60 * 1000;
+const LEADERS_CACHE_TTL = 5 * 60 * 1000;
 
 const getCurrentSeasonId = (): number => {
   const now = new Date();
@@ -110,6 +109,7 @@ export default defineComponent({
       playoffWins: [],
       playoffGaa: [],
       playoffSavePct: [],
+      abortController: new AbortController(),
     };
   },
   async mounted() {
@@ -126,13 +126,18 @@ export default defineComponent({
       this.isLoading = false;
     }
   },
+  beforeUnmount() {
+    this.abortController.abort();
+  },
   methods: {
     async fetchCurrentSeasonData() {
       const seasonApiUrl =
         "https://api.nhle.com/stats/rest/en/season?sort=%5B%7B%22property%22:%22id%22,%22direction%22:%22DESC%22%7D%5D";
-      const response = await fetch(`${proxy}${encodeURIComponent(seasonApiUrl)}`);
-      const envelope: ProxyEnvelope = await response.json();
-      const data: SeasonApiResponse = JSON.parse(envelope.body);
+      const data = await fetchProxyJson<SeasonApiResponse>(
+        seasonApiUrl,
+        SEASON_CACHE_TTL,
+        this.abortController.signal
+      );
       const currentSeason = data.data[0];
 
       if (currentSeason) {
@@ -167,9 +172,11 @@ export default defineComponent({
       factFilter?: string
     ): Promise<GoalieLeader[]> {
       const apiUrl = this.buildGoalieUrl(sortMetric, gameTypeId, factFilter);
-      const response = await fetch(`${proxy}${encodeURIComponent(apiUrl)}`);
-      const envelope: ProxyEnvelope = await response.json();
-      const data: GoalieApiResponse = JSON.parse(envelope.body);
+      const data = await fetchProxyJson<GoalieApiResponse>(
+        apiUrl,
+        LEADERS_CACHE_TTL,
+        this.abortController.signal
+      );
 
       return data.data.map(mapGoalie);
     },

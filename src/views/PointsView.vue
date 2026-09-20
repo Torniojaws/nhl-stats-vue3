@@ -3,7 +3,7 @@ import { defineComponent } from "vue";
 import PlayerPoints from "../components/points/PlayerPoints.vue";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
 import { isFinnishPlayer } from "../utils/players";
-import { proxy } from "@/api";
+import { fetchProxyJson } from "@/api";
 
 
 interface FinnishPlayerData {
@@ -28,10 +28,6 @@ interface SeasonApiResponse {
   data: SeasonData[];
 }
 
-interface ProxyEnvelope {
-  body: string;
-}
-
 interface PlayerData {
   name: string;
   teamAbbrev: string;
@@ -50,9 +46,12 @@ interface StateData {
   showFinnishOnly: boolean;
   showPlayoffLeaders: boolean;
   currentSeasonId: number;
+  abortController: AbortController;
 }
 
 const ONE_MONTH_IN_MS = 30 * 24 * 60 * 60 * 1000;
+const SEASON_CACHE_TTL = 60 * 60 * 1000;
+const LEADERS_CACHE_TTL = 5 * 60 * 1000;
 
 // Calculate current NHL season ID
 // NHL season runs from October (year) to June (year+1)
@@ -114,6 +113,7 @@ export default defineComponent({
       showFinnishOnly: false,
       showPlayoffLeaders: false,
       currentSeasonId: getCurrentSeasonId(),
+      abortController: new AbortController(),
     };
   },
   computed: {
@@ -152,13 +152,18 @@ export default defineComponent({
       this.isLoading = false;
     }
   },
+  beforeUnmount() {
+    this.abortController.abort();
+  },
   methods: {
     async fetchCurrentSeasonData() {
       const seasonApiUrl =
         "https://api.nhle.com/stats/rest/en/season?sort=%5B%7B%22property%22:%22id%22,%22direction%22:%22DESC%22%7D%5D";
-      const response = await fetch(`${proxy}${encodeURIComponent(seasonApiUrl)}`);
-      const envelope: ProxyEnvelope = await response.json();
-      const data: SeasonApiResponse = JSON.parse(envelope.body);
+      const data = await fetchProxyJson<SeasonApiResponse>(
+        seasonApiUrl,
+        SEASON_CACHE_TTL,
+        this.abortController.signal
+      );
       const currentSeason = data.data[0];
 
       if (currentSeason) {
@@ -168,9 +173,11 @@ export default defineComponent({
     },
     async fetchPlayers() {
       const apiUrl = `https://api.nhle.com/stats/rest/en/skater/summary?isAggregate=false&isGame=false&sort=%5B%7B%22property%22:%22points%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22goals%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22assists%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22playerId%22,%22direction%22:%22ASC%22%7D%5D&start=0&limit=25&cayenneExp=gameTypeId=2%20and%20seasonId%3C=${this.currentSeasonId}%20and%20seasonId%3E=${this.currentSeasonId}`;
-      const response = await fetch(`${proxy}${encodeURIComponent(apiUrl)}`);
-      const envelope: ProxyEnvelope = await response.json();
-      const data: FinnishApiResponse = JSON.parse(envelope.body);
+      const data = await fetchProxyJson<FinnishApiResponse>(
+        apiUrl,
+        LEADERS_CACHE_TTL,
+        this.abortController.signal
+      );
 
       this.players = data.data.map((player: FinnishPlayerData) => ({
         name: `${player.skaterFullName} (${player.teamAbbrevs})`,
@@ -183,9 +190,11 @@ export default defineComponent({
     },
     async fetchPlayoffPlayers() {
       const apiUrl = `https://api.nhle.com/stats/rest/en/skater/summary?isAggregate=false&isGame=false&sort=%5B%7B%22property%22:%22points%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22gamesPlayed%22,%22direction%22:%22ASC%22%7D,%7B%22property%22:%22playerId%22,%22direction%22:%22ASC%22%7D%5D&start=0&limit=25&cayenneExp=gameTypeId=3%20and%20seasonId%3C=${this.currentSeasonId}%20and%20seasonId%3E=${this.currentSeasonId}`;
-      const response = await fetch(`${proxy}${encodeURIComponent(apiUrl)}`);
-      const envelope: ProxyEnvelope = await response.json();
-      const data: FinnishApiResponse = JSON.parse(envelope.body);
+      const data = await fetchProxyJson<FinnishApiResponse>(
+        apiUrl,
+        LEADERS_CACHE_TTL,
+        this.abortController.signal
+      );
 
       this.playoffPlayers = data.data.map((player: FinnishPlayerData) =>
         mapPlayer(player)
@@ -194,11 +203,11 @@ export default defineComponent({
     async fetchFinnishPlayers() {
       try {
         const apiUrl = `https://api.nhle.com/stats/rest/en/skater/summary?isAggregate=false&isGame=false&sort=%5B%7B%22property%22:%22points%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22goals%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22assists%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22playerId%22,%22direction%22:%22ASC%22%7D%5D&start=0&limit=25&cayenneExp=gameTypeId=2%20and%20nationalityCode=%22FIN%22%20and%20seasonId%3C=${this.currentSeasonId}%20and%20seasonId%3E=${this.currentSeasonId}`;
-        const response = await fetch(
-          `${proxy}${encodeURIComponent(apiUrl)}`
+        const data = await fetchProxyJson<FinnishApiResponse>(
+          apiUrl,
+          LEADERS_CACHE_TTL,
+          this.abortController.signal
         );
-        const envelope: ProxyEnvelope = await response.json();
-        const data: FinnishApiResponse = JSON.parse(envelope.body);
         
         this.finnishPlayers = data.data.map((player: FinnishPlayerData) =>
           mapPlayer(player)
@@ -210,11 +219,11 @@ export default defineComponent({
     async fetchFinnishPlayoffPlayers() {
       try {
         const apiUrl = `https://api.nhle.com/stats/rest/en/skater/summary?isAggregate=false&isGame=false&sort=%5B%7B%22property%22:%22points%22,%22direction%22:%22DESC%22%7D,%7B%22property%22:%22gamesPlayed%22,%22direction%22:%22ASC%22%7D,%7B%22property%22:%22playerId%22,%22direction%22:%22ASC%22%7D%5D&start=0&limit=25&cayenneExp=gameTypeId=3%20and%20nationalityCode=%22FIN%22%20and%20seasonId%3C=${this.currentSeasonId}%20and%20seasonId%3E=${this.currentSeasonId}`;
-        const response = await fetch(
-          `${proxy}${encodeURIComponent(apiUrl)}`
+        const data = await fetchProxyJson<FinnishApiResponse>(
+          apiUrl,
+          LEADERS_CACHE_TTL,
+          this.abortController.signal
         );
-        const envelope: ProxyEnvelope = await response.json();
-        const data: FinnishApiResponse = JSON.parse(envelope.body);
 
         this.finnishPlayoffPlayers = data.data.map(
           (player: FinnishPlayerData) => mapPlayer(player)
