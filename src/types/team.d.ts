@@ -13,10 +13,11 @@ export interface GoalieData {
   name: {
     default: string;
   };
-  savePctg: string;
+  savePctg: number;
   goalsAgainst: number;
-  saveShotsAgainst: string;
+  saveShotsAgainst?: string;
   toi: string;
+  decision?: "W" | "L" | "O";
 }
 
 export interface GameStats {

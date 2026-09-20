@@ -14,12 +14,15 @@ export const getGoalieStats = async (
   const goalies = data.playerByGameStats[team].goalies;
   const goalieStats: IGoalieStats[] = [];
   for (const goalie of goalies) {
+    const [saves, shots] = (goalie.saveShotsAgainst ?? "0/0")
+      .split("/")
+      .map(Number);
     const goalieStat: IGoalieStats = {
-      decision: "", // TODO: Where is this info now?
+      decision: goalie.decision ?? "",
       name: goalie.name.default,
       nationality: "", // This is available in https://api-web.nhle.com/v1/player/:playerId/landing, but extremely slow
-      saves: Number(goalie.saveShotsAgainst.split("/")[0]),
-      shots: Number(goalie.saveShotsAgainst.split("/")[1]),
+      saves,
+      shots,
       savePercentage: Number((Number(goalie.savePctg ?? 0) * 100).toFixed(2)),
       timeOnIce: goalie.toi,
       teamAbbrev,

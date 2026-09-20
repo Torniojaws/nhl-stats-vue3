@@ -5,23 +5,25 @@ import { today, yesterday } from "../utils/dates";
 
 export const proxy = "https://cors.io/?url=";
 
+const parseApiResponse = (response: { body?: string } | unknown) => {
+  if (typeof response === "object" && response !== null && "body" in response) {
+    const body = (response as { body?: string }).body;
+    return typeof body === "string" ? JSON.parse(body) : body;
+  }
+  return response;
+};
+
 const getGamesOnDate = async (date: string) =>
   fetch(`${proxy}https://api-web.nhle.com/v1/schedule/${date}`)
     .then((response) => response.json())
-    .then((envelope) => {
-      const data = JSON.parse(envelope.body);
-      return data.gameWeek[0].games;
-    })
+    .then(parseApiResponse)
+    .then((data) => data.gameWeek[0].games)
     .catch((err) => err);
 
 const getGameResult = async (gameId: number): Promise<IPlayerByGameStats> =>
   fetch(`${proxy}https://api-web.nhle.com/v1/gamecenter/${gameId}/boxscore`)
     .then((response) => response.json())
-    .then((envelope) => {
-      const data = JSON.parse(envelope.body);
-      console.log(data);
-      return data;
-    })
+    .then(parseApiResponse)
     .catch((err) => err);
 
 const getAllGames = async (

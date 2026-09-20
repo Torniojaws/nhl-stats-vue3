@@ -7,7 +7,7 @@ import type { IGameData } from "@/types/game";
 export default defineComponent({
   props: ["away", "game", "home"],
   methods: {
-    getTeamBackground: (teamName: any) => getTeamColorCss(teamName),
+    getTeamBackground: (teamName: string) => getTeamColorCss(teamName),
     getTeamName: (teamAbbrev: string) => getTeamByAbbrev(teamAbbrev),
     getSeriesResult: (teamAbbrev: string, game: IGameData) =>
       getSeriesWins(teamAbbrev, game),
